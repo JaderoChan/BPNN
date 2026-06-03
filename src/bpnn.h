@@ -130,7 +130,7 @@ bool bpnnet_valid(const bpnnet_t* net);
 // =========
 
 /**
- * @brief Sigmoid 函数
+ * @brief Sigmoid 函数，值域 (0, 1)
  *
  * $$
  * f(x)=\frac{1}{1+e^{-x}}
@@ -153,6 +153,45 @@ static inline double sigmoid_deriv(double x)
 {
     const double t = exp(-x);
     return t / ((1.0 + t) * (1.0 + t));
+}
+
+/**
+ * @brief 双曲正切函数，值域 (-1, 1)
+ *
+ * $$
+ * f(x)=\frac{e^x-e^{-x}}{e^x+e^{-x}}
+ * $$
+ */
+static inline double tanh(double x)
+{
+    const double e_px = exp(x);
+    const double e_nx = exp(-x);
+    return (e_px - e_nx) / (e_px + e_nx);
+}
+
+/**
+ * @brief ReLU 函数
+ *
+ * $$
+ * f(x)=\max(0,x)
+ * $$
+ */
+static inline double relu(double x)
+{
+    return (x < 0.0 ? 0.0 : x);
+}
+
+/**
+ * @brief Leaky ReLU
+ *
+ * $$
+ * f(x)=\begin{cases}x&x\ge0\\\alpha x&x<0\end{cases},\alpha\ll1\qquad(a=1^{-12})
+ * $$
+ */
+static inline double leaky_relu(double x)
+{
+    double ret = x >= 0 ? x : (1e-12 * x);
+    return ret;
 }
 
 /** @brief Softmax 对应的多分类交叉熵损失函数
