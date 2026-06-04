@@ -407,6 +407,7 @@ void bpnn_train(
     double last_loss = NAN;
     for (uint32_t i = 0; i < epoch; ++i)
     {
+        double curr_loss = 0.0;
         for (uint32_t j = 0; j < group_num; ++j)
         {
             // 更新此次迭代的输入向量与真实标签向量。
@@ -415,15 +416,15 @@ void bpnn_train(
             // 进行正向传播与逆向传播。
             bpnnet_forward_propagation(&net);
             bpnnet_back_propagation(&net);
-            // 判断是否达到预期收敛值。
-            double curr_loss = loss(&net);
-            if (!isnan(last_loss) && fabs(curr_loss - last_loss) < esp)
-            {
-                bpnnet_destroy(&net);
-                return;
-            }
-            last_loss = curr_loss;
+            curr_loss += loss(&net);
         }
+        // 判断是否达到预期收敛值。
+        if (!isnan(last_loss) && fabs(curr_loss - last_loss) < esp)
+        {
+            bpnnet_destroy(&net);
+            return;
+        }
+        last_loss = curr_loss;
     }
 
     bpnnet_destroy(&net);
