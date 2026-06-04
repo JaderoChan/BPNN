@@ -23,3 +23,6 @@ install/
 *.pdb
 
 *.log
+
+# 忽略示例程序中解压后的数据集文件。
+example/data_set/*-ubyte

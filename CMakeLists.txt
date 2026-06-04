@@ -11,3 +11,8 @@ set(
 add_library(${PROJECT_NAME} STATIC ${SRCS})
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
+
+option(BPNN_BUILD_EXAMPLE "Build the digit recognizer example use BPNN." ON)
+if(BPNN_BUILD_EXAMPLE)
+    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/example)
+endif()
