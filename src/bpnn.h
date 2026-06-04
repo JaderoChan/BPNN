@@ -156,20 +156,6 @@ static inline double sigmoid_deriv(double x)
 }
 
 /**
- * @brief 双曲正切函数，值域 (-1, 1)
- *
- * $$
- * f(x)=\frac{e^x-e^{-x}}{e^x+e^{-x}}
- * $$
- */
-static inline double tanh(double x)
-{
-    const double e_px = exp(x);
-    const double e_nx = exp(-x);
-    return (e_px - e_nx) / (e_px + e_nx);
-}
-
-/**
  * @brief ReLU 函数
  *
  * $$
