@@ -187,7 +187,7 @@ static inline double relu(double x)
  */
 static inline double leaky_relu(double x)
 {
-    double ret = x >= 0 ? x : (1e-12 * x);
+    double ret = x >= 0 ? x : (1e-9 * x);
     return ret;
 }
 
