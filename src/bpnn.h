@@ -43,8 +43,6 @@
 #include <stdint.h>
 #include <string.h>
 
-#define BPNN_RESET(ptr) do { if ((ptr)) memset((ptr), 0, sizeof(*(ptr))); } while (0)
-
 // ======================
 // > BP 神经网络相关数据结构
 // ======================
