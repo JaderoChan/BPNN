@@ -111,7 +111,7 @@ bool load_labels_group_from_file(
         return false;
 
     const bool ok = load_labels_group_from_label_set(
-        labels_group, filepath, skip_bytes, group_num);
+        labels_group, file, skip_bytes, group_num);
     fclose(file);
     return ok;
 }
