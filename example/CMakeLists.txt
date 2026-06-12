@@ -22,8 +22,8 @@ set(LABELS_SKIP_BYTES  8)
 set(INPUT_IMAGE_SIZE   28)
 set(HIDE_LAYER_SIZE    128)
 set(TRAIN_LEARN_RATE   0.01)
-set(TRAIN_EPOCH        1000)
-set(TRAIN_ESP          0.01)
+set(TRAIN_EPOCH        50)
+set(TRAIN_ESP          0.5)
 
 configure_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/src/config.h.in
