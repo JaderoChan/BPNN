@@ -29,7 +29,7 @@ bool load_ins_group_from_image_set(
             const int c = fgetc(file);
             if (c == EOF)
             {
-                free((void*) data);
+                free(data);
                 return false;
             }
 
@@ -39,7 +39,7 @@ bool load_ins_group_from_image_set(
     }
 
     memcpy(ins_group, data, ins_group_bytes);
-    free((void*) data);
+    free(data);
 
     return true;
 }
@@ -85,7 +85,7 @@ bool load_labels_group_from_label_set(
         const int i = fgetc(file);
         if (i == EOF || i < 0 || i > 9)
         {
-            free((void*) data);
+            free(data);
             return false;
         }
 
@@ -94,7 +94,7 @@ bool load_labels_group_from_label_set(
     }
 
     memcpy(labels_group, data, labels_group_bytes);
-    free((void*) data);
+    free(data);
 
     return true;
 }
