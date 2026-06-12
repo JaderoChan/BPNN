@@ -66,8 +66,12 @@ typedef struct bpnn_params_t
     .hide_biases = NULL, .out_biases = NULL \
 }
 
+/** @brief 根据给定参数构造 \ref bpnn_params_t，权重矩阵与偏置值向量初始化为 0 */
+bool bpnn_params_construct_v1(
+    bpnn_params_t* params, uint32_t in_num, uint32_t hide_num, uint32_t out_num);
+
 /** @brief 根据给定参数构造 \ref bpnn_params_t */
-bool bpnn_params_construct(
+bool bpnn_params_construct_v2(
     bpnn_params_t* params, uint32_t in_num, uint32_t hide_num, uint32_t out_num,
     const double* in_hide_weights, const double* hide_out_weights,
     const double* hide_biases, const double* out_biases);

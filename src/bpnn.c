@@ -7,7 +7,53 @@
 #define MIN(a, b) (a < b ? a : b)
 #define MAX(a, b) (a > b ? a : b)
 
-bool bpnn_params_construct(
+bool bpnn_params_construct_v1(
+    bpnn_params_t* params, uint32_t in_num, uint32_t hide_num, uint32_t out_num)
+{
+    if (!params || in_num == 0 || hide_num == 0 || out_num == 0)
+        return false;
+
+    // ws1 : in_hide_weights
+    // ws2 : hide_out_weights
+    // bs1 : hide_biases
+    // bs2 : out_biases
+
+    const size_t ws1_bytes = (size_t) in_num   * (size_t) hide_num * sizeof(double);
+    const size_t ws2_bytes = (size_t) hide_num * (size_t) out_num  * sizeof(double);
+    const size_t bs1_bytes = (size_t) hide_num * sizeof(double);
+    const size_t bs2_bytes = (size_t) out_num  * sizeof(double);
+
+    double* new_ws1 = (double*) malloc(ws1_bytes);
+    double* new_ws2 = (double*) malloc(ws2_bytes);
+    double* new_bs1 = (double*) malloc(bs1_bytes);
+    double* new_bs2 = (double*) malloc(bs2_bytes);
+
+    if (!new_ws1 || !new_ws2 || !new_bs1 || !new_bs2)
+    {
+        if (new_ws1) free(new_ws1);
+        if (new_ws2) free(new_ws2);
+        if (new_bs1) free(new_bs1);
+        if (new_bs2) free(new_bs2);
+        return false;
+    }
+
+    memset(new_ws1, 0, ws1_bytes);
+    memset(new_ws2, 0, ws2_bytes);
+    memset(new_bs1, 0, bs1_bytes);
+    memset(new_bs2, 0, bs2_bytes);
+
+    params->in_num           = in_num;
+    params->hide_num         = hide_num;
+    params->out_num          = out_num;
+    params->in_hide_weights  = new_ws1;
+    params->hide_out_weights = new_ws2;
+    params->hide_biases      = new_bs1;
+    params->out_biases       = new_bs2;
+
+    return true;
+}
+
+bool bpnn_params_construct_v2(
     bpnn_params_t* params, uint32_t in_num, uint32_t hide_num, uint32_t out_num,
     const double* in_hide_weights, const double* hide_out_weights,
     const double* hide_biases, const double* out_biases)
