@@ -101,7 +101,7 @@ bool load_labels_group_from_label_set(
 
 bool load_labels_group_from_file(
     double* labels_group, const char* filepath,
-     size_t skip_bytes, size_t group_num)
+    size_t skip_bytes, size_t group_num)
 {
     if (!labels_group || !filepath)
         return false;
