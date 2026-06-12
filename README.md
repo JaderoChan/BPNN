@@ -15,6 +15,8 @@
 ```sh
 git clone https://github.com/JaderoChan/bpnn.git
 cd bpnn
-cmake -B build -DCMAKE_BUILD_TYPE=Release -DBPNN_BUILD_EXAMPLE=ON
+cmake -B build -DCMAKE_BUILD_TYPE=Release -DBPNN_BUILD_EXAMPLE=OFF
 cmake --build build -j --config=Release
 ```
+
+如果需要构建示例程序，需要先将 `example/data_set/` 下的数据压缩包进行解压，然后将 CMake 选项 `BPNN_BUILD_EXAMPLE` 置真。

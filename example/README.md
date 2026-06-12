@@ -12,3 +12,9 @@
 - train-labels-idx1-ubyte：跳过开头 8 个字节，之后每一个字节为 `train-images-idx3-ubyte` 相应位置图像的期望值（真实标签值），取值范围为 `0-9`。总共 60000 张。与 `train-images-idx3-ubyte` 共同用于模型训练。
 - t10k-images-idx3-ubyte：数据结构与 `train-images-idx3-ubyte` 相同，但图像数量为 10000 张。用于模型测试。
 - t10k-labels-idx1-ubyte：数据结构与 `train-labels-idx1-ubyte` 相同，但图像数量为 10000 张。与 `t10k-images-idx3-ubyte` 共同用于模型测试。
+
+## 结果
+
+迭代 50 轮后，最终的精确度能达到 **97%**
+
+![image.png](./image/image.png)
