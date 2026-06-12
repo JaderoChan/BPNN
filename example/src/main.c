@@ -10,8 +10,9 @@
 static void train_callback(
     uint32_t epoch, uint32_t total_epoch,
     double curr_loss, double delta_loss,
-    void* userdata)
+    bpnnet_t* net, void* userdata)
 {
+    (void) net;
     (void) userdata;
 
     if (isnan(delta_loss))
