@@ -34,7 +34,7 @@ bool load_ins_group_from_image_set(
             }
 
             const size_t idx = n * bytes_per_img + i;
-            data[idx]        = (double) c;
+            data[idx]        = (double) c / 255.0;
         }
     }
 
