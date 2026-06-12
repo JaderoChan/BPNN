@@ -26,3 +26,5 @@ install/
 
 # 忽略示例程序中解压后的数据集文件。
 example/data_set/*-ubyte
+# 忽略示例程序中 CMake 配置后的 config 头文件。
+example/src/config.h
