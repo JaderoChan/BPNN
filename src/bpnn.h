@@ -41,6 +41,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 
 // ======================
@@ -84,6 +85,14 @@ bool bpnn_params_valid(const bpnn_params_t* params);
 
 /** @brief 随机化指定 \ref bpnn_params_t 对象的权重参数至 Xavier 区间 */
 void bpnn_params_randomize(bpnn_params_t* params);
+
+bool bpnn_params_load(bpnn_params_t* params, FILE* file);
+
+bool bpnn_params_load_from_file(bpnn_params_t* params, const char* filepath);
+
+bool bpnn_params_save(const bpnn_params_t* params, FILE* file);
+
+bool bpnn_params_save_to_file(const bpnn_params_t* params, const char* filepath);
 
 /** @brief BP 神经网络，保存网络各节点数据，用于记录前向传播与逆向传播的中间状态 */
 typedef struct bpnnet_t

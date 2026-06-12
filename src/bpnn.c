@@ -163,6 +163,126 @@ void bpnn_params_randomize(bpnn_params_t* params)
     }
 }
 
+bool bpnn_params_load(bpnn_params_t* params, FILE* file)
+{
+    if (!params || !file || ferror(file))
+        return false;
+
+    uint32_t in_num   = 0;
+    uint32_t hide_num = 0;
+    uint32_t out_num  = 0;
+
+#define READ_ITEM(ptr, size, file) \
+do { if (fread(ptr, size, 1, file) != 1) return false; } while(0)
+
+    // Load input layer, hide layer and output layer node num.
+    READ_ITEM(&in_num,   sizeof(uint32_t), file);
+    READ_ITEM(&hide_num, sizeof(uint32_t), file);
+    READ_ITEM(&out_num,  sizeof(uint32_t), file);
+
+#undef READ_ITEM
+
+    bpnn_params_t tmp = BPNN_PARAMS_INIT;
+    if (!bpnn_params_construct_v1(&tmp, in_num, hide_num, out_num))
+        return false;
+
+    // Load input layer to hide layer weights.
+    size_t size = (size_t) in_num * (size_t) hide_num;
+    size_t read_n = fread(tmp.in_hide_weights, sizeof(double), size, file);
+    if (read_n != size)
+    {
+        bpnn_params_destroy(&tmp);
+        return false;
+    }
+
+    // Load hide layer to output layer weights.
+    size = (size_t) hide_num * (size_t) out_num;
+    read_n = fread(tmp.hide_out_weights, sizeof(double), size, file);
+    if (read_n != size)
+    {
+        bpnn_params_destroy(&tmp);
+        return false;
+    }
+
+    // Load hide layer biases.
+    size = (size_t) hide_num;
+    read_n = fread(tmp.hide_biases, sizeof(double), size, file);
+    if (read_n != size)
+    {
+        bpnn_params_destroy(&tmp);
+        return false;
+    }
+
+    // Load output layer biases.
+    size = (size_t) out_num;
+    read_n = fread(tmp.out_biases, sizeof(double), size, file);
+    if (read_n != size)
+    {
+        bpnn_params_destroy(&tmp);
+        return false;
+    }
+
+    *params = tmp;
+    return true;
+}
+
+bool bpnn_params_load_from_file(bpnn_params_t* params, const char* filepath)
+{
+    if (!params || !filepath)
+        return false;
+
+    FILE* file = fopen(filepath, "rb");
+    if (!file)
+        return false;
+
+    const bool ok = bpnn_params_load(params, file);
+    fclose(file);
+    return ok;
+}
+
+bool bpnn_params_save(const bpnn_params_t* params, FILE* file)
+{
+    if (!params || !bpnn_params_valid(params) || !file || ferror(file))
+        return false;
+
+#define WRITE_ITEM(ptr, size, file) \
+do { if (fwrite(ptr, size, 1, file) != 1) return false; } while(0)
+
+    WRITE_ITEM(&params->in_num,   sizeof(uint32_t), file);
+    WRITE_ITEM(&params->hide_num, sizeof(uint32_t), file);
+    WRITE_ITEM(&params->out_num,  sizeof(uint32_t), file);
+
+    const size_t ws1_num = (size_t) params->in_num   * (size_t) params->hide_num;
+    const size_t ws2_num = (size_t) params->hide_num * (size_t) params->out_num;
+
+    if (fwrite(params->in_hide_weights, sizeof(double), ws1_num, file) != ws1_num)
+        return false;
+    if (fwrite(params->hide_out_weights, sizeof(double), ws2_num, file) != ws2_num)
+        return false;
+    if (fwrite(params->hide_biases, sizeof(double), params->hide_num, file) != params->hide_num)
+        return false;
+    if (fwrite(params->out_biases, sizeof(double), params->out_num, file) != params->out_num)
+        return false;
+
+#undef WRITE_ITEM
+
+    return true;
+}
+
+bool bpnn_params_save_to_file(const bpnn_params_t* params, const char* filepath)
+{
+    if (!params || !bpnn_params_valid(params) || !filepath)
+        return false;
+
+    FILE* file = fopen(filepath, "wb");
+    if (!file)
+        return false;
+
+    const bool ok = bpnn_params_save(params, file);
+    fclose(file);
+    return ok;
+}
+
 bool bpnnet_construct_for_train(
     bpnnet_t* net, bpnn_params_t* params, const double* ins, const double* labels,
     double learn_rate)
@@ -269,7 +389,7 @@ bool bpnnet_valid(const bpnnet_t* net)
 {
     if (net)
     {
-        bool ok = (
+        const bool ok = (
             net->only_for_use ?
             true :
             (net->labels && net->hide_ds && net->out_ds && net->learn_rate != 0.0));
