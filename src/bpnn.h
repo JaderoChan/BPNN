@@ -238,11 +238,27 @@ void bpnnet_back_propagation(bpnnet_t* net);
 // > 训练与使用
 // ===========
 
+/**
+ * @brief 训练回调函数类型
+ * @param epoch       当前 epoch 编号（从 1 开始）
+ * @param total_epoch 总 epoch 数
+ * @param curr_loss   本 epoch 的总损失值
+ * @param delta_loss  本 epoch 与上一 epoch 的损失差值（第一个 epoch 为 NAN）
+ * @param net         本 epoch 的神经网络状态
+ * @param userdata    调用方传入的自定义指针
+ */
+typedef void (*bpnn_train_callback_t)(
+    uint32_t epoch, uint32_t total_epoch,
+    double curr_loss, double delta_loss,
+    bpnnet_t* net, void* userdata);
+
 void bpnn_train(
     bpnn_params_t* params      /**< [in, out] */,
     const double* ins_group    /**< [in] 多组输入向量 */,
     const double* labels_group /**< [in] 多组真实标签向量 */,
-    uint32_t group_num, double learn_rate, uint32_t epoch, double esp);
+    uint32_t group_num, double learn_rate, uint32_t epoch, double esp,
+    bpnn_train_callback_t callback /**< [in] 每个 epoch 结束后调用，可为 NULL */,
+    void* userdata                 /**< [in] 传递给回调的自定义指针，可为 NULL */);
 
 void bpnn_use(const bpnn_params_t* params, const double* ins, double* outs);
 

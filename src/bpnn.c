@@ -559,7 +559,8 @@ void bpnnet_back_propagation(bpnnet_t* net)
 
 void bpnn_train(
     bpnn_params_t* params, const double* ins_group, const double* labels_group,
-    uint32_t group_num, double learn_rate, uint32_t epoch, double esp)
+    uint32_t group_num, double learn_rate, uint32_t epoch, double esp,
+    bpnn_train_callback_t callback, void* userdata)
 {
     if (!params || !ins_group || !labels_group ||
         group_num == 0 || learn_rate == 0.0 ||
@@ -584,8 +585,13 @@ void bpnn_train(
             bpnnet_back_propagation(&net);
             curr_loss += loss(&net);
         }
+
+        const double delta_loss = isnan(last_loss) ? NAN : (curr_loss - last_loss);
+        if (callback)
+            callback(i + 1, epoch, curr_loss, delta_loss, &net, userdata);
+
         // 判断是否达到预期收敛值。
-        if (!isnan(last_loss) && fabs(curr_loss - last_loss) < esp)
+        if (!isnan(last_loss) && fabs(delta_loss) < esp)
         {
             bpnnet_destroy(&net);
             return;
