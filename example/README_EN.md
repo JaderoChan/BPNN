@@ -31,7 +31,7 @@ Extract the archives under `data_set/` before use.
 
 ## Results
 
-After 50 training epochs, the model achieves **98%** accuracy on the test set.
+After 50 training epochs, the model achieves **98%** accuracy on the test set, the train takes about five minutes.
 
 ![image.png](./image/image.png)
 
