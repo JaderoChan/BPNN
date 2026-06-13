@@ -25,11 +25,7 @@
 
 /**
  * @file bpnn.h
- * @brief 手撕 BP 神经网络。
- * @details
- * 使用 Sigmoid 函数作为隐藏层激活函数；
- * 使用 Softmax 函数作为输出层激活函数；
- * 使用 Softmax 对应的多分类交叉熵函数作为损失函数。
+ * @brief 一个纯 C99 实现的三层全连接 BP 神经网络库，无任何第三方依赖，出于学习目的创建。
  * @author 頔珞 JaderoChan
  * @version 0.1.0
  */
@@ -51,9 +47,9 @@
 /** @brief BP 神经网络参数 */
 typedef struct bpnn_params_t
 {
-    uint32_t in_num;    /**< 输入层节点数量 */
-    uint32_t hide_num;  /**< 隐藏层节点数量 */
-    uint32_t out_num;   /**< 输出层节点数量 */
+    uint32_t in_num;            /**< 输入层节点数量 */
+    uint32_t hide_num;          /**< 隐藏层节点数量 */
+    uint32_t out_num;           /**< 输出层节点数量 */
 
     double* in_hide_weights;    /**< 输入层-隐藏层权重矩阵 */
     double* hide_out_weights;   /**< 隐藏层-输出层权重矩阵 */
@@ -140,12 +136,29 @@ bool bpnnet_valid(const bpnnet_t* net);
 // > 工具函数
 // =========
 
+/** @brief 激活函数枚举 */
+typedef enum ActivationFn
+{
+    ACT_FN_SIGMOID,
+    ACT_FN_TANH,
+    ACT_FN_RELU,
+    ACT_FN_LEAKY_RELU,
+    ACT_FN_SOFTMAX,
+    ACT_FN_LINEAR
+} ActivationFn;
+
+/** @brief 损失函数枚举 */
+typedef enum LossFn
+{
+    LOSS_FN_MCE, /**< 多分类交叉熵 */
+    LOSS_FN_BCE, /**< 二元交叉熵 */
+    LOSS_FN_MSE  /**< 均方误差 */
+} LossFn;
+
 /**
  * @brief Sigmoid 函数，值域 (0, 1)
  *
- * $$
- * f(x)=\frac{1}{1+e^{-x}}
- * $$
+ * $$\sigma(x)=\frac{1}{1+e^{-x}}$$
  */
 static inline double sigmoid(double x)
 {
@@ -156,22 +169,36 @@ static inline double sigmoid(double x)
  *
  * @brief Sigmoid 导函数
  *
- * $$
- * f(x)=\frac{e^{-x}}{(1+e^{-x})^2}
- * $$
+ * $$\sigma'(x)=\sigma(x)(1-\sigma(x))$$
  */
 static inline double sigmoid_deriv(double x)
 {
-    const double t = exp(-x);
-    return t / ((1.0 + t) * (1.0 + t));
+    const double t = sigmoid(x);
+    return t * (1.0 - t);
+}
+
+/**
+ * @brief Tanh 函数，值域 (-1, 1)，C 标准包含
+ *
+ * $$tanh(x)=\frac{e^x-e^{-x}}{e^x+e^{-x}}$$
+ */
+// static inline double tanh(double x);
+
+/**
+ * @brief Tanh 导函数
+ *
+ * $$tanh'(x)=1-tanh^2(x)$$
+ */
+static inline double tanh_deriv(double x)
+{
+    const double t = tanh(x);
+    return 1.0 - t * t;
 }
 
 /**
  * @brief ReLU 函数
  *
- * $$
- * f(x)=\max(0,x)
- * $$
+ * $$f(x)=\max(0,x)$$
  */
 static inline double relu(double x)
 {
@@ -179,23 +206,59 @@ static inline double relu(double x)
 }
 
 /**
- * @brief Leaky ReLU
+ * @brief ReLU 导函数。
  *
- * $$
- * f(x)=\begin{cases}x&x\ge0\\\alpha x&x<0\end{cases},\alpha\ll1\qquad(a=1^{-12})
- * $$
+ * $$f'(x)=\begin{cases}1&x\gt0\\0&x\le0\end{cases}$$
+ */
+static inline double relu_deriv(double x)
+{
+    return (x <= 0.0 ? 0.0 : 1.0);
+}
+
+/**
+ * @brief Leaky ReLU 函数
+ *
+ * $$f(x)=\begin{cases}x&x\ge0\\\alpha x&x<0\end{cases}\quad0<\alpha\ll1\quad(a=1^{-9})$$
  */
 static inline double leaky_relu(double x)
 {
-    double ret = x >= 0 ? x : (1e-9 * x);
-    return ret;
+    return (x >= 0 ? x : (1e-9 * x));
+}
+
+/**
+ * @brief Leaky ReLU 导函数
+ *
+ * $$f'(x)=\begin{cases}1&x\ge0\\\alpha&x\lt0\end{cases}\quad(\alpha=1^{-9})$$
+ */
+static inline double leaky_relu_deriv(double x)
+{
+    return (x >= 0 ? 1 : 1e-9);
+}
+
+/**
+ * @brief Linear 线性函数
+ *
+ * $$f(x)=x$$
+ */
+static inline double linear(double x)
+{
+    return x;
+}
+
+/**
+ * @brief Linear 导函数
+ *
+ * $$f'(x)=1$$
+ */
+static inline double linear_deriv(double x)
+{
+    (void) x;
+    return 1.0;
 }
 
 /** @brief Softmax 对应的多分类交叉熵损失函数
  *
- * $$
- * L=-\sum_{k=1}^{r}y_k\cdot\log(\hat{y}_k)
- * $$
+ * $$L=-\sum_{k=1}^{r}y_k\cdot\log(\hat{y}_k)$$
  */
 double loss(const bpnnet_t* net);
 

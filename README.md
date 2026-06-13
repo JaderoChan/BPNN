@@ -4,15 +4,17 @@
 
 一个纯 C99 实现的三层全连接 BP 神经网络库，无任何第三方依赖，出于学习目的创建。
 
-- **隐藏层激活函数**：Sigmoid
-- **输出层激活函数**：Softmax
-- **损失函数**：多分类交叉熵
+> **可用枚举**
+>
+> - **激活函数**：Sigmoid、Tanh、ReLU、Leaky ReLU、Softmax、Linear
+> - **损失函数**：MCE（多分类交叉熵）、BCE（二元交叉熵）、MSE（均方误差）
 
 公式推导详见 [BP 神经网络公式推导](BP%20神经网络公式推导.md)。
 
 ## 特性
 
 - 零依赖，仅使用 C 标准库
+- 提供常见的各类激活函数与损失函数，可满足多种任务需求
 - 前向传播与反向传播完全解耦，可单独调用各步骤
 - 支持模型参数的保存与加载
 - 训练过程支持自定义回调函数，可实时监控损失值
@@ -57,7 +59,7 @@ cmake --build build -j --config=Release
 ```c
 // 训练
 bpnn_train(&params, ins_group, labels_group, group_num,
-           learn_rate, epoch, esp, callback, userdata);
+    learn_rate, epoch, esp, callback, userdata);
 
 // 推理
 bpnn_use(&params, ins, outs);
@@ -67,4 +69,4 @@ bpnn_use(&params, ins, outs);
 
 ## 示例
 
-基于本库实现的 MNIST 手写数字识别程序，50 轮训练后准确率可达 **97%**，详见 [BPNN Digit Recognizer](./example/README.md)。
+基于本库实现的 MNIST 手写数字识别程序（使用 Sigmoid 函数作为隐藏层激活函数，Softmax 作为输出层激活函数，多分类交叉熵作为损失函数），50 轮训练后准确率可达 **97%**，详见 [BPNN Digit Recognizer](./example/README.md)。

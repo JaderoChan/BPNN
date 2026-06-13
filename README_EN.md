@@ -6,15 +6,17 @@
 
 A three-layer fully-connected BP neural network library implemented in pure C99, with no third-party dependencies, created for learning purposes.
 
-- **Hidden layer activation**: Sigmoid
-- **Output layer activation**: Softmax
-- **Loss function**: Multi-class cross-entropy
+> **Available enumeration**
+>
+> - **Activation functions**: Sigmoid, Tanh, ReLU, Leaky ReLU, Softmax, Linear
+> - **Loss functions**：MCE (Multi-class cross entropy), BCE (Binary cross entropy), MSE (Mean square error)
 
 For formula derivations, see [BP Neural Network Formula Derivation](BP%20Neural%20Network%20Formula%20Derivation.md).
 
 ## Features
 
 - Zero dependencies, standard C library only
+- Provides common types of activation functions and loss functions to meet the needs of a variety of tasks
 - Forward and backward propagation fully decoupled — each step can be called independently
 - Model parameter saving and loading support
 - Training supports custom callbacks for real-time loss monitoring
@@ -59,7 +61,7 @@ cmake --build build -j --config=Release
 ```c
 // Train
 bpnn_train(&params, ins_group, labels_group, group_num,
-           learn_rate, epoch, esp, callback, userdata);
+    learn_rate, epoch, esp, callback, userdata);
 
 // Inference
 bpnn_use(&params, ins, outs);
@@ -69,4 +71,4 @@ bpnn_use(&params, ins, outs);
 
 ## Example
 
-An MNIST handwritten digit recognition program built on this library, achieving **97%** accuracy after 50 training epochs. See [BPNN Digit Recognizer](./example/README_EN.md).
+An MNIST handwritten digit recognition program built on this library (Use the Sigmoid function as the hidden layer activation function, Softmax as the output layer activation function, and multi-class cross entropy as the loss function.), achieving **97%** accuracy after 50 training epochs. See [BPNN Digit Recognizer](./example/README_EN.md).
