@@ -47,12 +47,12 @@ cmake --build build -j --config=Release
 
 | 函数 | 说明 |
 | --- | --- |
-| `bpnn_params_construct_v1()` | 创建参数（权重和偏置初始化为 0） |
-| `bpnn_params_construct_v2()` | 创建参数（指定初始权重和偏置） |
+| `bpnn_params_construct_v1()` | 创建 BP 神经网络参数（权重和偏置初始化为 0） |
+| `bpnn_params_construct_v2()` | 创建 BP 神经网络参数（指定初始权重和偏置） |
 | `bpnn_params_randomize()` | Xavier 随机初始化权重 |
-| `bpnn_params_save_to_file()` | 保存参数到文件 |
-| `bpnn_params_load_from_file()` | 从文件加载参数 |
-| `bpnn_params_destroy()` | 释放参数内存 |
+| `bpnn_params_save_to_file()` | 保存 BP 神经网络参数到文件 |
+| `bpnn_params_load_from_file()` | 从文件加载 BP 神经网络参数 |
+| `bpnn_params_destroy()` | 释放 BP 神经网络参数内存 |
 
 ### 训练与推理
 

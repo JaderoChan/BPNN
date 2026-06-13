@@ -49,12 +49,12 @@ cmake --build build -j --config=Release
 
 | Function | Description |
 | --- | --- |
-| `bpnn_params_construct_v1()` | Create parameters (weights and biases initialized to 0) |
-| `bpnn_params_construct_v2()` | Create parameters (with specified initial weights and biases) |
+| `bpnn_params_construct_v1()` | Create BP neural network parameters (weights and biases initialized to 0) |
+| `bpnn_params_construct_v2()` | Create BP neural network parameters (with specified initial weights and biases) |
 | `bpnn_params_randomize()` | Xavier random initialization of weights |
-| `bpnn_params_save_to_file()` | Save parameters to file |
-| `bpnn_params_load_from_file()` | Load parameters from file |
-| `bpnn_params_destroy()` | Free parameter memory |
+| `bpnn_params_save_to_file()` | Save BP neural network parameters to file |
+| `bpnn_params_load_from_file()` | Load BP neural network parameters from file |
+| `bpnn_params_destroy()` | Free BP neural network parameter memory |
 
 ### Training and Inference
 
