@@ -71,4 +71,4 @@ bpnn_use(&params, ins, outs);
 
 ## Example
 
-An MNIST handwritten digit recognition program built on this library (Use the Sigmoid function as the hidden layer activation function, Softmax as the output layer activation function, and multi-class cross entropy as the loss function.), achieving **97%** accuracy after 50 training epochs. See [BPNN Digit Recognizer](./example/README_EN.md).
+An MNIST handwritten digit recognition program built on this library (Use the Sigmoid function as the hidden layer activation function, Softmax as the output layer activation function, and multi-class cross entropy as the loss function.), achieving **98%** accuracy after 50 training epochs. See [BPNN Digit Recognizer](./example/README_EN.md).
