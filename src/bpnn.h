@@ -70,10 +70,10 @@ typedef struct bpnn_params_t
     uint32_t hide_num;          /**< 隐藏层节点数量 */
     uint32_t out_num;           /**< 输出层节点数量 */
 
-    double* in_hide_weights;    /**< 输入层-隐藏层权重矩阵 */
-    double* hide_out_weights;   /**< 隐藏层-输出层权重矩阵 */
-    double* hide_biases;        /**< 隐藏层偏置值向量 */
-    double* out_biases;         /**< 输出层偏置值向量 */
+    double*  in_hide_weights;   /**< 输入层-隐藏层权重矩阵 */
+    double*  hide_out_weights;  /**< 隐藏层-输出层权重矩阵 */
+    double*  hide_biases;       /**< 隐藏层偏置值向量 */
+    double*  out_biases;        /**< 输出层偏置值向量 */
 } bpnn_params_t;
 
 #define BPNN_PARAMS_INIT { \
@@ -116,8 +116,8 @@ typedef struct bpnnet_t
     bool only_for_use;
 
     const bpnn_params_t* params;    /**< 神经网络参数，无所有权 */
-    const double* ins;              /**< 输入向量，无所有权 */
-    const double* labels;           /**< 真实标签向量，无所有权 */
+    const double*        ins;       /**< 输入向量，无所有权 */
+    const double*        labels;    /**< 真实标签向量，无所有权 */
 
     double* unact_hides;            /**< 激活前的隐藏层向量 */
     double* unact_outs;             /**< 激活前的输出层向量 */
@@ -138,9 +138,10 @@ typedef struct bpnnet_t
 }
 
 bool bpnnet_construct_for_train(
-    bpnnet_t* net, bpnn_params_t* params,
-    const double* ins    /**< Can be NULL */,
-    const double* labels /**< Can be NULL */,
+    bpnnet_t* net,
+    bpnn_params_t* params,
+    const double*  ins    /**< Can be NULL */,
+    const double*  labels /**< Can be NULL */,
     double learn_rate);
 
 bool bpnnet_construct_for_use(
@@ -209,8 +210,8 @@ typedef void (*bpnn_train_callback_t)(
 
 void bpnn_train(
     bpnn_params_t* params          /**< [in, out] */,
-    const double* ins_group        /**< [in] 多组输入向量 */,
-    const double* labels_group     /**< [in] 多组真实标签向量 */,
+    const double*  ins_group       /**< [in] 多组输入向量 */,
+    const double*  labels_group    /**< [in] 多组真实标签向量 */,
     uint32_t group_num, double learn_rate, uint32_t epoch, double esp,
     bpnn_train_callback_t callback /**< [in] 每个 epoch 结束后调用，可为 NULL */,
     void* userdata                 /**< [in] 传递给回调的自定义指针，可为 NULL */);
