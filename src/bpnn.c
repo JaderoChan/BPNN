@@ -8,9 +8,11 @@
 #define MAX(a, b) (a > b ? a : b)
 
 bool bpnn_params_construct_v1(
-    bpnn_params_t* params, uint32_t in_num, uint32_t hide_num, uint32_t out_num)
+    bpnn_params_t* params, ActivationFn hide_fn, ActivationFn out_fn,
+    uint32_t in_num, uint32_t hide_num, uint32_t out_num)
 {
-    if (!params || in_num == 0 || hide_num == 0 || out_num == 0)
+    if (!params || hide_fn == ACT_FN_NONE || out_fn == ACT_FN_NONE ||
+        in_num == 0 || hide_num == 0 || out_num == 0)
         return false;
 
     // ws1 : in_hide_weights
@@ -42,9 +44,13 @@ bool bpnn_params_construct_v1(
     memset(new_bs1, 0, bs1_bytes);
     memset(new_bs2, 0, bs2_bytes);
 
+    params->hide_fn          = hide_fn;
+    params->out_fn           = out_fn;
+
     params->in_num           = in_num;
     params->hide_num         = hide_num;
     params->out_num          = out_num;
+
     params->in_hide_weights  = new_ws1;
     params->hide_out_weights = new_ws2;
     params->hide_biases      = new_bs1;
@@ -54,11 +60,13 @@ bool bpnn_params_construct_v1(
 }
 
 bool bpnn_params_construct_v2(
-    bpnn_params_t* params, uint32_t in_num, uint32_t hide_num, uint32_t out_num,
+    bpnn_params_t* params, ActivationFn hide_fn, ActivationFn out_fn,
+    uint32_t in_num, uint32_t hide_num, uint32_t out_num,
     const double* in_hide_weights, const double* hide_out_weights,
     const double* hide_biases, const double* out_biases)
 {
-    if (!params || in_num == 0 || hide_num == 0 || out_num == 0 ||
+    if (!params || hide_fn == ACT_FN_NONE || out_fn == ACT_FN_NONE ||
+        in_num == 0 || hide_num == 0 || out_num == 0 ||
         !in_hide_weights || !hide_out_weights || !hide_biases || !out_biases)
         return false;
 
@@ -91,9 +99,13 @@ bool bpnn_params_construct_v2(
     memcpy(new_bs1, hide_biases,      bs1_bytes);
     memcpy(new_bs2, out_biases,       bs2_bytes);
 
+    params->hide_fn          = hide_fn;
+    params->out_fn           = out_fn;
+
     params->in_num           = in_num;
     params->hide_num         = hide_num;
     params->out_num          = out_num;
+
     params->in_hide_weights  = new_ws1;
     params->hide_out_weights = new_ws2;
     params->hide_biases      = new_bs1;
@@ -111,6 +123,7 @@ void bpnn_params_destroy(bpnn_params_t* params)
         if (params->hide_biases)        free(params->hide_biases);
         if (params->out_biases)         free(params->out_biases);
 
+        params->hide_fn = params->out_fn = ACT_FN_NONE;
         params->in_num = params->hide_num = params->out_num = 0;
         params->in_hide_weights  = NULL;
         params->hide_out_weights = NULL;
@@ -122,7 +135,8 @@ void bpnn_params_destroy(bpnn_params_t* params)
 bool bpnn_params_valid(const bpnn_params_t* params)
 {
     return (
-        params && params->in_num != 0 && params->hide_num != 0 && params->out_num != 0 &&
+        params && params->hide_fn != ACT_FN_NONE && params->out_fn != ACT_FN_NONE &&
+        params->in_num != 0 && params->hide_num != 0 && params->out_num != 0 &&
         params->in_hide_weights && params->hide_out_weights &&
         params->hide_biases && params->out_biases
     );
@@ -168,6 +182,9 @@ bool bpnn_params_load(bpnn_params_t* params, FILE* file)
     if (!params || !file || ferror(file))
         return false;
 
+    ActivationFn hide_fn = ACT_FN_NONE;
+    ActivationFn out_fn  = ACT_FN_NONE;
+
     uint32_t in_num   = 0;
     uint32_t hide_num = 0;
     uint32_t out_num  = 0;
@@ -175,15 +192,19 @@ bool bpnn_params_load(bpnn_params_t* params, FILE* file)
 #define READ_ITEM(ptr, size, file) \
 do { if (fread(ptr, size, 1, file) != 1) return false; } while(0)
 
+    // Load activation function flag.
+    READ_ITEM(&hide_fn,  sizeof(ActivationFn), file);
+    READ_ITEM(&out_fn,   sizeof(ActivationFn), file);
+
     // Load input layer, hide layer and output layer node num.
-    READ_ITEM(&in_num,   sizeof(uint32_t), file);
-    READ_ITEM(&hide_num, sizeof(uint32_t), file);
-    READ_ITEM(&out_num,  sizeof(uint32_t), file);
+    READ_ITEM(&in_num,   sizeof(uint32_t),     file);
+    READ_ITEM(&hide_num, sizeof(uint32_t),     file);
+    READ_ITEM(&out_num,  sizeof(uint32_t),     file);
 
 #undef READ_ITEM
 
     bpnn_params_t tmp = BPNN_PARAMS_INIT;
-    if (!bpnn_params_construct_v1(&tmp, in_num, hide_num, out_num))
+    if (!bpnn_params_construct_v1(&tmp, hide_fn, out_fn, in_num, hide_num, out_num))
         return false;
 
     // Load input layer to hide layer weights.
@@ -248,9 +269,11 @@ bool bpnn_params_save(const bpnn_params_t* params, FILE* file)
 #define WRITE_ITEM(ptr, size, file) \
 do { if (fwrite(ptr, size, 1, file) != 1) return false; } while(0)
 
-    WRITE_ITEM(&params->in_num,   sizeof(uint32_t), file);
-    WRITE_ITEM(&params->hide_num, sizeof(uint32_t), file);
-    WRITE_ITEM(&params->out_num,  sizeof(uint32_t), file);
+    WRITE_ITEM(&params->hide_fn,  sizeof(ActivationFn), file);
+    WRITE_ITEM(&params->out_fn,   sizeof(ActivationFn), file);
+    WRITE_ITEM(&params->in_num,   sizeof(uint32_t),     file);
+    WRITE_ITEM(&params->hide_num, sizeof(uint32_t),     file);
+    WRITE_ITEM(&params->out_num,  sizeof(uint32_t),     file);
 
     const size_t ws1_num = (size_t) params->in_num   * (size_t) params->hide_num;
     const size_t ws2_num = (size_t) params->hide_num * (size_t) params->out_num;
@@ -284,10 +307,11 @@ bool bpnn_params_save_to_file(const bpnn_params_t* params, const char* filepath)
 }
 
 bool bpnnet_construct_for_train(
-    bpnnet_t* net, bpnn_params_t* params, const double* ins, const double* labels,
-    double learn_rate)
+    bpnnet_t* net, double learn_rate, LossFn loss_fn,
+    bpnn_params_t* params, const double* ins, const double* labels)
 {
-    if (!net || !params || learn_rate == 0.0 || !bpnn_params_valid(params))
+    if (!net || learn_rate == 0.0 || loss_fn == LOSS_FN_NONE ||
+        !params || !bpnn_params_valid(params))
         return false;
 
     const size_t hide_bytes = (size_t) params->hide_num * sizeof(double);
@@ -311,23 +335,26 @@ bool bpnnet_construct_for_train(
         return false;
     }
 
-    net->only_for_use = false;
-    net->params       = params;
-    net->ins          = ins;
-    net->labels       = labels;
-    net->learn_rate   = learn_rate;
+    net->only_for_use   = false;
+    net->learn_rate     = learn_rate;
+    net->loss_fn        = loss_fn;
 
-    net->unact_hides  = unact_hides;
-    net->unact_outs   = unact_outs;
-    net->hides        = hides;
-    net->outs         = outs;
-    net->hide_ds      = hide_ds;
-    net->out_ds       = out_ds;
+    net->params         = params;
+    net->ins            = ins;
+    net->labels         = labels;
+
+    net->unact_hides    = unact_hides;
+    net->unact_outs     = unact_outs;
+    net->hides          = hides;
+    net->outs           = outs;
+    net->hide_ds        = hide_ds;
+    net->out_ds         = out_ds;
 
     return true;
 }
 
-bool bpnnet_construct_for_use(bpnnet_t* net, const bpnn_params_t* params, const double* ins)
+bool bpnnet_construct_for_use(
+    bpnnet_t* net, const bpnn_params_t* params, const double* ins)
 {
     if (!net || !params || !bpnn_params_valid(params))
         return false;
@@ -349,18 +376,20 @@ bool bpnnet_construct_for_use(bpnnet_t* net, const bpnn_params_t* params, const 
         return false;
     }
 
-    net->only_for_use = true;
-    net->params       = params;
-    net->ins          = ins;
-    net->labels       = NULL;
-    net->learn_rate   = 0.0;
+    net->only_for_use   = true;
+    net->learn_rate     = 0.0;
+    net->loss_fn        = LOSS_FN_NONE;
 
-    net->unact_hides  = unact_hides;
-    net->unact_outs   = unact_outs;
-    net->hides        = hides;
-    net->outs         = outs;
-    net->hide_ds      = NULL;
-    net->out_ds       = NULL;
+    net->params         = params;
+    net->ins            = ins;
+    net->labels         = NULL;
+
+    net->unact_hides    = unact_hides;
+    net->unact_outs     = unact_outs;
+    net->hides          = hides;
+    net->outs           = outs;
+    net->hide_ds        = NULL;
+    net->out_ds         = NULL;
 
     return true;
 }
@@ -376,12 +405,16 @@ void bpnnet_destroy(bpnnet_t* net)
         if (net->hide_ds)       free(net->hide_ds);
         if (net->out_ds)        free(net->out_ds);
 
+        net->only_for_use = false;
+        net->learn_rate   = 0.0;
+        net->loss_fn      = LOSS_FN_NONE;
+
         net->params = NULL;
         net->ins = net->labels = NULL;
-        net->unact_hides = net->unact_outs   = NULL;
-        net->hides       = net->outs         = NULL;
-        net->hide_ds     = net->out_ds       = NULL;
-        net->learn_rate  = 0.0;
+
+        net->unact_hides = net->unact_outs = NULL;
+        net->hides       = net->outs       = NULL;
+        net->hide_ds     = net->out_ds     = NULL;
     }
 }
 
@@ -389,15 +422,14 @@ bool bpnnet_valid(const bpnnet_t* net)
 {
     if (net)
     {
-        const bool ok = (
-            net->only_for_use ?
-            true :
-            (net->labels && net->hide_ds && net->out_ds && net->learn_rate != 0.0));
+        bool ok =
+            net->learn_rate != 0.0 && net->loss_fn != LOSS_FN_NONE &&
+            net->labels && net->hide_ds && net->out_ds;
+        ok = net->only_for_use ? true : ok;
         return (
-            ok && net->params && net->ins &&
+            ok && net->params && bpnn_params_valid(net->params) && net->ins &&
             net->unact_hides && net->unact_outs &&
-            net->hides       && net->outs &&
-            bpnn_params_valid(net->params)
+            net->hides       && net->outs
         );
     }
     return false;
@@ -543,17 +575,18 @@ void bpnnet_back_propagation(bpnnet_t* net)
 }
 
 void bpnn_train(
+    double learn_rate, LossFn loss_fn,
     bpnn_params_t* params, const double* ins_group, const double* labels_group,
-    uint32_t group_num, double learn_rate, uint32_t epoch, double esp,
+    uint32_t group_num, uint32_t epoch, double esp,
     bpnn_train_callback_t callback, void* userdata)
 {
-    if (!params || !ins_group || !labels_group ||
-        group_num == 0 || learn_rate == 0.0 ||
-        !bpnn_params_valid(params))
+    if (learn_rate == 0.0 || loss_fn == LOSS_FN_NONE ||
+        !params || !bpnn_params_valid(params) ||
+        !ins_group || !labels_group || group_num == 0)
         return;
 
     bpnnet_t net = BPNNET_INIT;
-    if (!bpnnet_construct_for_train(&net, params, NULL, NULL, learn_rate))
+    if (!bpnnet_construct_for_train(&net, learn_rate, loss_fn, params, NULL, NULL))
         return;
 
     bool stop = false;
@@ -589,7 +622,7 @@ void bpnn_train(
 
 void bpnn_use(const bpnn_params_t* params, const double* ins, double* outs)
 {
-    if (!params || !ins || !outs || !bpnn_params_valid(params))
+    if (!params || !bpnn_params_valid(params) || !ins || !outs)
         return;
 
     bpnnet_t net = BPNNET_INIT;

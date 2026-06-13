@@ -35,7 +35,8 @@ int main(int argc, char* argv[])
     bpnn_params_t params = BPNN_PARAMS_INIT;
     {
         const bool ok = bpnn_params_construct_v1(
-            &params, INPUT_LAYER_SIZE, HIDE_LAYER_SIZE, OUTPUT_LAYER_SIZE);
+            &params, ACT_FN_SIGMOID, ACT_FN_SOFTMAX,
+            INPUT_LAYER_SIZE, HIDE_LAYER_SIZE, OUTPUT_LAYER_SIZE);
         if (!ok) ERROR_EXIT("Failed to construct bpnn_params_t.\n", 1);
     }
 
@@ -83,9 +84,8 @@ int main(int argc, char* argv[])
         // 训练
         printf("- Train\n");
         bpnn_train(
-            &params, ins_group, labels_group,
-            TRAIN_GROUP_NUM, TRAIN_LEARN_RATE, TRAIN_EPOCH, TRAIN_ESP,
-            train_callback, NULL);
+            TRAIN_LEARN_RATE, LOSS_FN_MCE, &params, ins_group, labels_group,
+            TRAIN_GROUP_NUM, TRAIN_EPOCH, TRAIN_ESP, train_callback, NULL);
     }
 
     // ======
