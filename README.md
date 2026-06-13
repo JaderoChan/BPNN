@@ -47,25 +47,27 @@ cmake --build build -j --config=Release
 
 | 函数 | 说明 |
 | --- | --- |
-| `bpnn_params_construct_v1` | 创建参数（权重和偏置初始化为 0） |
-| `bpnn_params_construct_v2` | 创建参数（指定初始权重和偏置） |
-| `bpnn_params_randomize` | Xavier 随机初始化权重 |
-| `bpnn_params_save_to_file` | 保存参数到文件 |
-| `bpnn_params_load_from_file` | 从文件加载参数 |
-| `bpnn_params_destroy` | 释放参数内存 |
+| `bpnn_params_construct_v1()` | 创建参数（权重和偏置初始化为 0） |
+| `bpnn_params_construct_v2()` | 创建参数（指定初始权重和偏置） |
+| `bpnn_params_randomize()` | Xavier 随机初始化权重 |
+| `bpnn_params_save_to_file()` | 保存参数到文件 |
+| `bpnn_params_load_from_file()` | 从文件加载参数 |
+| `bpnn_params_destroy()` | 释放参数内存 |
 
 ### 训练与推理
 
 ```c
 // 训练
-bpnn_train(&params, ins_group, labels_group, group_num,
-    learn_rate, epoch, esp, callback, userdata);
+void bpnn_train(
+    bpnn_params_t* params, const double* ins_group, const double* labels_group, uint32_t group_num,
+    double learn_rate, LossFn loss_fn, uint32_t epoch, double esp,
+    bpnn_train_callback_t callback, void* userdata)
 
 // 推理
-bpnn_use(&params, ins, outs);
+void bpnn_use(const bpnn_params_t* params, const double* ins, double* outs);
 ```
 
-`bpnn_train` 的 `callback` 参数可为 `NULL`；若提供，则在每个 epoch 结束后调用，参数包含当前损失值及与上一 epoch 的损失差。
+`bpnn_train` 的 `callback` 参数可为 `NULL`；若提供，则在每轮结束后调用，参数包含当前损失值及与上一轮的损失差等信息。
 
 ## 示例
 

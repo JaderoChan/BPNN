@@ -49,22 +49,24 @@ cmake --build build -j --config=Release
 
 | Function | Description |
 | --- | --- |
-| `bpnn_params_construct_v1` | Create parameters (weights and biases initialized to 0) |
-| `bpnn_params_construct_v2` | Create parameters (with specified initial weights and biases) |
-| `bpnn_params_randomize` | Xavier random initialization of weights |
-| `bpnn_params_save_to_file` | Save parameters to file |
-| `bpnn_params_load_from_file` | Load parameters from file |
-| `bpnn_params_destroy` | Free parameter memory |
+| `bpnn_params_construct_v1()` | Create parameters (weights and biases initialized to 0) |
+| `bpnn_params_construct_v2()` | Create parameters (with specified initial weights and biases) |
+| `bpnn_params_randomize()` | Xavier random initialization of weights |
+| `bpnn_params_save_to_file()` | Save parameters to file |
+| `bpnn_params_load_from_file()` | Load parameters from file |
+| `bpnn_params_destroy()` | Free parameter memory |
 
 ### Training and Inference
 
 ```c
 // Train
-bpnn_train(&params, ins_group, labels_group, group_num,
-    learn_rate, epoch, esp, callback, userdata);
+void bpnn_train(
+    bpnn_params_t* params, const double* ins_group, const double* labels_group, uint32_t group_num,
+    double learn_rate, LossFn loss_fn, uint32_t epoch, double esp,
+    bpnn_train_callback_t callback, void* userdata)
 
 // Inference
-bpnn_use(&params, ins, outs);
+void bpnn_use(const bpnn_params_t* params, const double* ins, double* outs);
 ```
 
 `bpnn_train`'s `callback` parameter may be `NULL`; if provided, it is called at the end of each epoch with the current loss value and the delta from the previous epoch.
