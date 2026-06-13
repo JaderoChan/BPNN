@@ -571,6 +571,7 @@ void bpnn_train(
     if (!bpnnet_construct_for_train(&net, params, NULL, NULL, learn_rate))
         return;
 
+    bool stop = false;
     double last_loss = NAN;
     for (uint32_t i = 0; i < epoch; ++i)
     {
@@ -588,14 +589,13 @@ void bpnn_train(
 
         const double delta_loss = isnan(last_loss) ? NAN : (curr_loss - last_loss);
         if (callback)
-            callback(i + 1, epoch, curr_loss, delta_loss, &net, userdata);
+            callback(i + 1, epoch, curr_loss, delta_loss, &net, &stop, userdata);
+        if (stop)
+            break;
 
         // 判断是否达到预期收敛值。
         if (!isnan(last_loss) && fabs(delta_loss) < esp)
-        {
-            bpnnet_destroy(&net);
-            return;
-        }
+            break;
         last_loss = curr_loss;
     }
 

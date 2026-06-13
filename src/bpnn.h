@@ -245,12 +245,14 @@ void bpnnet_back_propagation(bpnnet_t* net);
  * @param curr_loss   本 epoch 的总损失值
  * @param delta_loss  本 epoch 与上一 epoch 的损失差值（第一个 epoch 为 NAN）
  * @param net         本 epoch 的神经网络状态
+ * @param stop        是否停止训练
  * @param userdata    调用方传入的自定义指针
  */
 typedef void (*bpnn_train_callback_t)(
     uint32_t epoch, uint32_t total_epoch,
     double curr_loss, double delta_loss,
-    bpnnet_t* net, void* userdata);
+    bpnnet_t* net, bool* stop,
+    void* userdata);
 
 void bpnn_train(
     bpnn_params_t* params      /**< [in, out] */,
