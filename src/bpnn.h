@@ -44,6 +44,25 @@
 // > BP 神经网络相关数据结构
 // ======================
 
+/** @brief 激活函数枚举 */
+typedef enum ActivationFn
+{
+    ACT_FN_SIGMOID,
+    ACT_FN_TANH,
+    ACT_FN_RELU,
+    ACT_FN_LEAKY_RELU,
+    ACT_FN_SOFTMAX,
+    ACT_FN_LINEAR
+} ActivationFn;
+
+/** @brief 损失函数枚举 */
+typedef enum LossFn
+{
+    LOSS_FN_MCE, /**< 多分类交叉熵 */
+    LOSS_FN_BCE, /**< 二元交叉熵 */
+    LOSS_FN_MSE  /**< 均方误差 */
+} LossFn;
+
 /** @brief BP 神经网络参数 */
 typedef struct bpnn_params_t
 {
@@ -134,27 +153,73 @@ void bpnnet_destroy(bpnnet_t* net);
 bool bpnnet_valid(const bpnnet_t* net);
 
 // =========
-// > 工具函数
+// > 前向传播
 // =========
 
-/** @brief 激活函数枚举 */
-typedef enum ActivationFn
-{
-    ACT_FN_SIGMOID,
-    ACT_FN_TANH,
-    ACT_FN_RELU,
-    ACT_FN_LEAKY_RELU,
-    ACT_FN_SOFTMAX,
-    ACT_FN_LINEAR
-} ActivationFn;
+/** @brief 计算隐藏层节点激活前的值 */
+void bpnnet_comp_unact_hides(bpnnet_t* net);
 
-/** @brief 损失函数枚举 */
-typedef enum LossFn
-{
-    LOSS_FN_MCE, /**< 多分类交叉熵 */
-    LOSS_FN_BCE, /**< 二元交叉熵 */
-    LOSS_FN_MSE  /**< 均方误差 */
-} LossFn;
+/** @brief 计算隐藏层节点激活后的值 */
+void bpnnet_comp_hides(bpnnet_t* net);
+
+/** @brief 计算输出层节点激活前的值 */
+void bpnnet_comp_unact_outs(bpnnet_t* net);
+
+/** @brief 计算输出层节点激活后的值 */
+void bpnnet_comp_outs(bpnnet_t* net);
+
+/** @brief 上面四个函数的组合 */
+void bpnnet_forward_propagation(bpnnet_t* net);
+
+// =========
+// > 逆向传播
+// =========
+
+/** @brief 计算损失函数对输出层节点激活前的值的偏导 */
+void bpnnet_comp_out_ds(bpnnet_t* net);
+
+/** @brief 计算损失函数对隐藏层节点激活前的值的偏导 */
+void bpnnet_comp_hide_ds(bpnnet_t* net);
+
+/** @brief 更新 BP 神经网络参数 */
+void bpnnet_update_params(bpnnet_t* net);
+
+/** @brief 上面三个函数的组合 */
+void bpnnet_back_propagation(bpnnet_t* net);
+
+// ===========
+// > 训练与使用
+// ===========
+
+/**
+ * @brief 训练回调函数类型
+ * @param epoch       当前 epoch 编号（从 1 开始）
+ * @param total_epoch 总 epoch 数
+ * @param curr_loss   本 epoch 的总损失值
+ * @param delta_loss  本 epoch 与上一 epoch 的损失差值（第一个 epoch 为 NAN）
+ * @param net         本 epoch 的神经网络状态
+ * @param stop        是否停止训练
+ * @param userdata    调用方传入的自定义指针
+ */
+typedef void (*bpnn_train_callback_t)(
+    uint32_t epoch, uint32_t total_epoch,
+    double curr_loss, double delta_loss,
+    const bpnnet_t* net, bool* stop,
+    void* userdata);
+
+void bpnn_train(
+    bpnn_params_t* params          /**< [in, out] */,
+    const double* ins_group        /**< [in] 多组输入向量 */,
+    const double* labels_group     /**< [in] 多组真实标签向量 */,
+    uint32_t group_num, double learn_rate, uint32_t epoch, double esp,
+    bpnn_train_callback_t callback /**< [in] 每个 epoch 结束后调用，可为 NULL */,
+    void* userdata                 /**< [in] 传递给回调的自定义指针，可为 NULL */);
+
+void bpnn_use(const bpnn_params_t* params, const double* ins, double* outs);
+
+// =========
+// > 工具函数
+// =========
 
 /**
  * @brief Sigmoid 函数，值域 (0, 1)
@@ -262,70 +327,5 @@ static inline double linear_deriv(double x)
  * $$L=-\sum_{k=1}^{r}y_k\cdot\log(\hat{y}_k)$$
  */
 double loss(const bpnnet_t* net);
-
-// =========
-// > 前向传播
-// =========
-
-/** @brief 计算隐藏层节点激活前的值 */
-void bpnnet_comp_unact_hides(bpnnet_t* net);
-
-/** @brief 计算隐藏层节点激活后的值 */
-void bpnnet_comp_hides(bpnnet_t* net);
-
-/** @brief 计算输出层节点激活前的值 */
-void bpnnet_comp_unact_outs(bpnnet_t* net);
-
-/** @brief 计算输出层节点激活后的值 */
-void bpnnet_comp_outs(bpnnet_t* net);
-
-/** @brief 上面四个函数的组合 */
-void bpnnet_forward_propagation(bpnnet_t* net);
-
-// =========
-// > 逆向传播
-// =========
-
-/** @brief 计算损失函数对输出层节点激活前的值的偏导 */
-void bpnnet_comp_out_ds(bpnnet_t* net);
-
-/** @brief 计算损失函数对隐藏层节点激活前的值的偏导 */
-void bpnnet_comp_hide_ds(bpnnet_t* net);
-
-/** @brief 更新 BP 神经网络参数 */
-void bpnnet_update_params(bpnnet_t* net);
-
-/** @brief 上面三个函数的组合 */
-void bpnnet_back_propagation(bpnnet_t* net);
-
-// ===========
-// > 训练与使用
-// ===========
-
-/**
- * @brief 训练回调函数类型
- * @param epoch       当前 epoch 编号（从 1 开始）
- * @param total_epoch 总 epoch 数
- * @param curr_loss   本 epoch 的总损失值
- * @param delta_loss  本 epoch 与上一 epoch 的损失差值（第一个 epoch 为 NAN）
- * @param net         本 epoch 的神经网络状态
- * @param stop        是否停止训练
- * @param userdata    调用方传入的自定义指针
- */
-typedef void (*bpnn_train_callback_t)(
-    uint32_t epoch, uint32_t total_epoch,
-    double curr_loss, double delta_loss,
-    const bpnnet_t* net, bool* stop,
-    void* userdata);
-
-void bpnn_train(
-    bpnn_params_t* params          /**< [in, out] */,
-    const double* ins_group        /**< [in] 多组输入向量 */,
-    const double* labels_group     /**< [in] 多组真实标签向量 */,
-    uint32_t group_num, double learn_rate, uint32_t epoch, double esp,
-    bpnn_train_callback_t callback /**< [in] 每个 epoch 结束后调用，可为 NULL */,
-    void* userdata                 /**< [in] 传递给回调的自定义指针，可为 NULL */);
-
-void bpnn_use(const bpnn_params_t* params, const double* ins, double* outs);
 
 #endif // !BPNN_H

@@ -403,21 +403,6 @@ bool bpnnet_valid(const bpnnet_t* net)
     return false;
 }
 
-double loss(const bpnnet_t* net)
-{
-    assert(bpnnet_valid(net));
-
-    const double tiny = 1e-12;
-    double sum = 0.0;
-    for (uint32_t i = 0; i < net->params->out_num; ++i)
-    {
-        // log() 函数在实参值极小的情况下可能产生极端值/无效值，通过 MAX 进行钳位。
-        const double out = MAX(net->outs[i], tiny);
-        sum += net->labels[i] * log(out);
-    }
-    return -sum;
-}
-
 void bpnnet_comp_unact_hides(bpnnet_t* net)
 {
     assert(bpnnet_valid(net));
@@ -615,4 +600,19 @@ void bpnn_use(const bpnn_params_t* params, const double* ins, double* outs)
     memcpy(outs, net.outs, (size_t) params->out_num * sizeof(double));
 
     bpnnet_destroy(&net);
+}
+
+double loss(const bpnnet_t* net)
+{
+    assert(bpnnet_valid(net));
+
+    const double tiny = 1e-12;
+    double sum = 0.0;
+    for (uint32_t i = 0; i < net->params->out_num; ++i)
+    {
+        // log() 函数在实参值极小的情况下可能产生极端值/无效值，通过 MAX 进行钳位。
+        const double out = MAX(net->outs[i], tiny);
+        sum += net->labels[i] * log(out);
+    }
+    return -sum;
 }
