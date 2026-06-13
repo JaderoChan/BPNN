@@ -1,16 +1,25 @@
 # BP 神经网络
 
-这是一个三层全连接 BP 神经网络的实现，出于学习目的，没有依赖任何第三方库。各个部分都进行了解耦，可以进行多种切实的任务训练。
+[**中文简体** | [English](README_EN.md)]
 
-其中隐藏层激活函数使用 Sigmoid，输出层激活函数使用 Softmax，损失函数使用多分类交叉熵。
+一个纯 C99 实现的三层全连接 BP 神经网络库，无任何第三方依赖，出于学习目的创建。
 
-关于各参数的公式推导部分，可以参见此文档 [BP 神经网络公式推导](BP%20神经网络公式推导.md)。
+- **隐藏层激活函数**：Sigmoid
+- **输出层激活函数**：Softmax
+- **损失函数**：多分类交叉熵
 
-## 示例
+公式推导详见 [BP 神经网络公式推导](BP%20神经网络公式推导.md)。
 
-使用此库实现了一个数字识别的程序，参见 [BPNN Digit Recognizer](./example/README.md)
+## 特性
 
-## 如何构建
+- 零依赖，仅使用 C 标准库
+- 前向传播与反向传播完全解耦，可单独调用各步骤
+- 支持模型参数的保存与加载
+- 训练过程支持自定义回调函数，可实时监控损失值
+
+## 快速开始
+
+### 构建库
 
 ```sh
 git clone https://github.com/JaderoChan/bpnn.git
@@ -19,4 +28,43 @@ cmake -B build -DCMAKE_BUILD_TYPE=Release -DBPNN_BUILD_EXAMPLE=OFF
 cmake --build build -j --config=Release
 ```
 
-如果需要构建示例程序，需要先将 `example/data_set/` 下的数据压缩包进行解压，然后将 CMake 选项 `BPNN_BUILD_EXAMPLE` 置真。
+构建产物为静态库 `libbpnn.a`，头文件位于 `src/bpnn.h`。
+
+### 构建示例程序
+
+若需同时构建示例程序，请先解压 `example/data_set/` 下的数据集压缩包，再开启对应选项：
+
+```sh
+cmake -B build -DCMAKE_BUILD_TYPE=Release -DBPNN_BUILD_EXAMPLE=ON
+cmake --build build -j --config=Release
+```
+
+## API 概览
+
+### 参数管理
+
+| 函数 | 说明 |
+| --- | --- |
+| `bpnn_params_construct_v1` | 创建参数（权重和偏置初始化为 0） |
+| `bpnn_params_construct_v2` | 创建参数（指定初始权重和偏置） |
+| `bpnn_params_randomize` | Xavier 随机初始化权重 |
+| `bpnn_params_save_to_file` | 保存参数到文件 |
+| `bpnn_params_load_from_file` | 从文件加载参数 |
+| `bpnn_params_destroy` | 释放参数内存 |
+
+### 训练与推理
+
+```c
+// 训练
+bpnn_train(&params, ins_group, labels_group, group_num,
+           learn_rate, epoch, esp, callback, userdata);
+
+// 推理
+bpnn_use(&params, ins, outs);
+```
+
+`bpnn_train` 的 `callback` 参数可为 `NULL`；若提供，则在每个 epoch 结束后调用，参数包含当前损失值及与上一 epoch 的损失差。
+
+## 示例
+
+基于本库实现的 MNIST 手写数字识别程序，50 轮训练后准确率可达 **97%**，详见 [BPNN Digit Recognizer](./example/README.md)。
