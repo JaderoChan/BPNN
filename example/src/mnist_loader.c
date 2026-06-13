@@ -12,16 +12,19 @@ bool load_ins_group_from_image_set(
     if (!ins_group || !file || ferror(file) )
         return false;
 
+    // 跳过开头忽略的字节
     for (size_t i = 0; i < skip_bytes; ++i)
     {
         if (fgetc(file) == EOF)
             return false;
     }
 
+    // 预分配内存
     const size_t ins_group_bytes = group_num * bytes_per_img * sizeof(double);
     double* data = (double*) malloc(ins_group_bytes);
     if (!data) return false;
 
+    // 读取数据
     for (size_t n = 0; n < group_num; ++n)
     {
         for (size_t i = 0; i < bytes_per_img; ++i)
@@ -68,18 +71,21 @@ bool load_labels_group_from_label_set(
     if (!labels_group || !file || ferror(file) )
         return false;
 
+    // 跳过开头忽略的字节
     for (size_t i = 0; i < skip_bytes; ++i)
     {
         if (fgetc(file) == EOF)
             return false;
     }
 
+    // 预分配内存
     const size_t labels_num = OUTPUT_LAYER_SIZE; // 0-9 digits
     const size_t labels_group_bytes = group_num * labels_num * sizeof(double);
     double* data = (double*) malloc(labels_group_bytes);
     if (!data) return false;
     memset(data, 0, labels_group_bytes);
 
+    // 读取数据
     for (size_t n = 0; n < group_num; ++n)
     {
         const int i = fgetc(file);

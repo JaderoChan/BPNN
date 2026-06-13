@@ -16,6 +16,7 @@ static void train_callback(
     (void) stop;
     (void) userdata;
 
+    // 打印训练轮数与损失值相关信息。
     if (isnan(delta_loss))
         printf("[Epoch %3u/%u] loss: %.4f\n", epoch, total_epoch, curr_loss);
     else
@@ -31,7 +32,7 @@ int main(int argc, char* argv[])
 
     printf(">>> Train\n");
 
-    // 初始化参数
+    // 初始化 BP 神经网络参数。使用 Sigmoid 和 Softmax 作为隐藏层和输出层的激活函数。
     bpnn_params_t params = BPNN_PARAMS_INIT;
     {
         const bool ok = bpnn_params_construct_v1(
@@ -47,6 +48,7 @@ int main(int argc, char* argv[])
         // 读取训练数据
         printf("- Load train data\n");
 
+        // 预分配内存
         const size_t ins_group_bytes    = TRAIN_GROUP_NUM * INPUT_LAYER_SIZE * sizeof(double);
         double*      ins_group          = (double*) malloc(ins_group_bytes);
         const size_t labels_group_bytes = TRAIN_GROUP_NUM * OUTPUT_LAYER_SIZE * sizeof(double);
@@ -61,12 +63,14 @@ int main(int argc, char* argv[])
         }
 
         {
+            // 读取训练用输入数据集。
             const bool ok1 = load_ins_group_from_file(
                 ins_group,
                 TRAIN_INPUTS_FILE,
                 INPUTS_SKIP_BYTES,
                 INPUT_LAYER_SIZE,
                 TRAIN_GROUP_NUM);
+            // 读取训练用真实标签数据集。
             const bool ok2 = load_labels_group_from_file(
                 labels_group,
                 TRAIN_LABELS_FILE,
@@ -81,7 +85,7 @@ int main(int argc, char* argv[])
             }
         }
 
-        // 训练
+        // 训练。使用多分类交叉熵函数作为损失函数。
         printf("- Train\n");
         bpnn_train(
             &params, ins_group, labels_group, TRAIN_GROUP_NUM,
@@ -99,6 +103,7 @@ int main(int argc, char* argv[])
         // 读取验证数据
         printf("- Load verify data\n");
 
+        // 预分配内存
         const size_t ins_group_bytes    = VERIFY_GROUP_NUM * INPUT_LAYER_SIZE * sizeof(double);
         double*      ins_group          = (double*) malloc(ins_group_bytes);
         const size_t labels_group_bytes = VERIFY_GROUP_NUM * OUTPUT_LAYER_SIZE * sizeof(double);
@@ -113,12 +118,14 @@ int main(int argc, char* argv[])
         }
 
         {
+            // 读取验证/测试用输入数据集
             const bool ok1 = load_ins_group_from_file(
                 ins_group,
                 VERIFY_INPUTS_FILE,
                 INPUTS_SKIP_BYTES,
                 INPUT_LAYER_SIZE,
                 VERIFY_GROUP_NUM);
+            // 读取验证/测试用真实标签数据集
             const bool ok2 = load_labels_group_from_file(
                 labels_group,
                 VERIFY_LABELS_FILE,
@@ -136,14 +143,15 @@ int main(int argc, char* argv[])
         // 验证
         printf("- Verify\n");
 
-        size_t correct = 0;
-        double outs[OUTPUT_LAYER_SIZE] = {0.0};
+        size_t correct = 0; // 正确数量
+        double outs[OUTPUT_LAYER_SIZE] = {0.0}; // 输出向量
         for (size_t i = 0; i < VERIFY_GROUP_NUM; ++i)
         {
             const double* ins    = &ins_group[i * params.in_num];
             const double* labels = &labels_group[i * params.out_num];
             bpnn_use(&params, ins, outs);
 
+            // 读取当前输出的数字
             int num = -1;
             for (int n = 0; n < OUTPUT_LAYER_SIZE; ++n)
             {
@@ -151,6 +159,7 @@ int main(int argc, char* argv[])
                     num = n;
             }
 
+            // 读取当前真实标签数字
             int label = -1;
             for (int n = 0; n < OUTPUT_LAYER_SIZE; ++n)
             {
