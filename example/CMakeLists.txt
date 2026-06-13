@@ -42,6 +42,7 @@ set(
     SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/src/main.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/mnist_loader.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/elapsed_timer.c
 )
 
 add_executable(${PROJECT_NAME} ${SRCS})

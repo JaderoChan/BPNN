@@ -3,6 +3,7 @@
 
 #include <bpnn.h>
 #include "config.h"
+#include "elapsed_timer.h"
 #include "mnist_loader.h"
 
 #define ERROR_EXIT(msg, ec) do { fprintf(stderr, (msg)); return (ec); } while(0)
@@ -14,18 +15,25 @@ static void train_callback(
 {
     (void) net;
     (void) stop;
-    (void) userdata;
+
+    elapsed_timer_t* et = (elapsed_timer_t*) userdata;
 
     // 打印训练轮数与损失值相关信息。
     if (isnan(delta_loss))
-        printf("[Epoch %3u/%u] loss: %.4f\n", epoch, total_epoch, curr_loss);
+        printf("[Epoch %3u/%u] loss: %.4f", epoch, total_epoch, curr_loss);
     else
-        printf("[Epoch %3u/%u] loss: %.4f delta: %+.4f\n",
+        printf("[Epoch %3u/%u] loss: %.4f delta: %+.4f",
             epoch, total_epoch, curr_loss, delta_loss);
+
+    uint64_t ms = elapsed_timer_elapsed_ms_reset(et);
+    printf(" [%llu ms]\n", ms);
 }
 
 int main(int argc, char* argv[])
 {
+    elapsed_timer_t et = ELAPSED_TIMER_INIT;
+    elapsed_timer_create(&et);
+
     // ======
     // > 训练
     // ======
@@ -87,10 +95,18 @@ int main(int argc, char* argv[])
 
         // 训练。使用多分类交叉熵函数作为损失函数。
         printf("- Train\n");
+
+        elapsed_timer_t et2 = ELAPSED_TIMER_INIT;
+        elapsed_timer_create(&et2);
+        elapsed_timer_reset(&et);
+
         bpnn_train(
             &params, ins_group, labels_group, TRAIN_GROUP_NUM,
             TRAIN_LEARN_RATE, LOSS_FN_MCE, TRAIN_EPOCH, TRAIN_ESP,
-            train_callback, NULL);
+            train_callback, &et2);
+
+        double sec = elapsed_timer_elapsed_sec(&et);
+        printf("[Train elapsed: %lf sec]\n", sec);
     }
 
     // ======
@@ -142,6 +158,7 @@ int main(int argc, char* argv[])
 
         // 验证
         printf("- Verify\n");
+        elapsed_timer_reset(&et);
 
         size_t correct = 0; // 正确数量
         double outs[OUTPUT_LAYER_SIZE] = {0.0}; // 输出向量
@@ -169,6 +186,9 @@ int main(int argc, char* argv[])
 
             correct += (num == label ? 1 : 0);
         }
+
+        double sec = elapsed_timer_elapsed_sec(&et);
+        printf("[Verify elapsed: %lf sec]\n", sec);
 
         // 计算并输出准确率
         printf("Precision: %lf.\n", (double) correct / (double) VERIFY_GROUP_NUM);
