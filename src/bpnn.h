@@ -25,7 +25,7 @@
 
 /**
  * @file bpnn.h
- * @brief 一个纯 C99 实现的三层全连接 BP 神经网络库，无任何第三方依赖，出于学习目的创建。
+ * @brief 一个纯 C99 实现的三层全连接 BP 神经网络库，无任何第三方依赖，出于学习目的创建
  * @author 頔珞 JaderoChan
  * @version 0.1.0
  */
@@ -121,8 +121,8 @@ bool bpnn_params_save_to_file(const bpnn_params_t* params, const char* filepath)
 typedef struct bpnnet_t
 {
     /**
-     * 是否仅用于模型使用（仅前向传播）。
-     * 若为真，则 labels、hide_ds 和 out_ds 为空指针且学习率和损失函数无意义。
+     * 是否仅用于模型使用（仅前向传播），
+     * 若为真，则 labels、hide_ds 和 out_ds 为空指针且学习率和损失函数无意义
      */
     bool only_for_use;
 
@@ -289,7 +289,7 @@ static inline double relu(double x)
 }
 
 /**
- * @brief ReLU 导函数。
+ * @brief ReLU 导函数
  *
  * $$f'(x)=\begin{cases}1&x\gt0\\0&x\le0\end{cases}$$
  */
@@ -302,7 +302,7 @@ static inline double relu_deriv(double x)
  * @brief Leaky ReLU 函数（此处超参数 α 硬编码为 0.001）
  *
  * $$f(x)=\begin{cases}x&x\ge0\\\alpha x&x<0\end{cases}\quad0<\alpha\ll1\quad(a=1^{-3})$$
- * @todo 考虑超参数的设置。
+ * @todo 考虑超参数的设置
  */
 static inline double leaky_relu(double x)
 {
