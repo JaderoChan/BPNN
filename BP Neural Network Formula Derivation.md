@@ -4,7 +4,7 @@
 
 Consider a **three-layer fully-connected BP neural network**.
 
-The following content is derived using **Sigmoid** and **Softmax** as activation functions of the hidden layer and output layer respectively, and **Multi-classification cross-entropy** as the loss function (for single-label multi-classification tasks). The use of other functions can also be deduced based on this process, which will not be described here. (May be added in the future)
+The following content is derived using **Sigmoid** and **Softmax** as activation functions of the hidden layer and output layer respectively, and **Multi-classification cross-entropy** as the loss function (for single-label multi-classification tasks). The use of other functions can also be deduced based on this process, which will not be described here (May be added in the future).
 
 $$
 \begin{aligned}
