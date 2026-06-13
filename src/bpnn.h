@@ -251,7 +251,7 @@ void bpnnet_back_propagation(bpnnet_t* net);
 typedef void (*bpnn_train_callback_t)(
     uint32_t epoch, uint32_t total_epoch,
     double curr_loss, double delta_loss,
-    bpnnet_t* net, bool* stop,
+    const bpnnet_t* net, bool* stop,
     void* userdata);
 
 void bpnn_train(
