@@ -35,17 +35,20 @@
 
 #include <math.h>
 #include <stdbool.h>
-#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <string.h>
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 
 // ======================
 // > BP 神经网络相关数据结构
 // ======================
 
 /** @brief 激活函数枚举 */
-typedef enum activation_fn_t : uint8_t
+typedef enum activation_fn_t
 {
     ACT_FN_NONE,
     ACT_FN_SIGMOID,
@@ -57,7 +60,7 @@ typedef enum activation_fn_t : uint8_t
 } activation_fn_t;
 
 /** @brief 损失函数枚举 */
-typedef enum loss_fn_t : uint8_t
+typedef enum loss_fn_t
 {
     LOSS_FN_NONE, /**< 无效值 */
     LOSS_FN_MSE,  /**< 均方误差 */
@@ -340,10 +343,14 @@ static inline double linear_deriv(double x)
     return 1.0;
 }
 
-/** @brief Softmax 对应的多分类交叉熵损失函数
+/** @brief 多分类交叉熵损失函数
  *
  * $$L=-\sum_{k=1}^{r}y_k\cdot\log(\hat{y}_k)$$
  */
 double loss(const bpnnet_t* net);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // !BPNN_H
