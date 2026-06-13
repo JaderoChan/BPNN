@@ -307,11 +307,11 @@ bool bpnn_params_save_to_file(const bpnn_params_t* params, const char* filepath)
 }
 
 bool bpnnet_construct_for_train(
-    bpnnet_t* net, double learn_rate, LossFn loss_fn,
-    bpnn_params_t* params, const double* ins, const double* labels)
+    bpnnet_t* net, bpnn_params_t* params, const double* ins, const double* labels,
+    double learn_rate, LossFn loss_fn)
 {
-    if (!net || learn_rate == 0.0 || loss_fn == LOSS_FN_NONE ||
-        !params || !bpnn_params_valid(params))
+    if (!net || !params || !bpnn_params_valid(params) ||
+        learn_rate == 0.0 || loss_fn == LOSS_FN_NONE)
         return false;
 
     const size_t hide_bytes = (size_t) params->hide_num * sizeof(double);
@@ -336,8 +336,6 @@ bool bpnnet_construct_for_train(
     }
 
     net->only_for_use   = false;
-    net->learn_rate     = learn_rate;
-    net->loss_fn        = loss_fn;
 
     net->params         = params;
     net->ins            = ins;
@@ -350,11 +348,13 @@ bool bpnnet_construct_for_train(
     net->hide_ds        = hide_ds;
     net->out_ds         = out_ds;
 
+    net->learn_rate     = learn_rate;
+    net->loss_fn        = loss_fn;
+
     return true;
 }
 
-bool bpnnet_construct_for_use(
-    bpnnet_t* net, const bpnn_params_t* params, const double* ins)
+bool bpnnet_construct_for_use(bpnnet_t* net, const bpnn_params_t* params, const double* ins)
 {
     if (!net || !params || !bpnn_params_valid(params))
         return false;
@@ -377,8 +377,6 @@ bool bpnnet_construct_for_use(
     }
 
     net->only_for_use   = true;
-    net->learn_rate     = 0.0;
-    net->loss_fn        = LOSS_FN_NONE;
 
     net->params         = params;
     net->ins            = ins;
@@ -390,6 +388,9 @@ bool bpnnet_construct_for_use(
     net->outs           = outs;
     net->hide_ds        = NULL;
     net->out_ds         = NULL;
+
+    net->learn_rate     = 0.0;
+    net->loss_fn        = LOSS_FN_NONE;
 
     return true;
 }
@@ -406,8 +407,6 @@ void bpnnet_destroy(bpnnet_t* net)
         if (net->out_ds)        free(net->out_ds);
 
         net->only_for_use = false;
-        net->learn_rate   = 0.0;
-        net->loss_fn      = LOSS_FN_NONE;
 
         net->params = NULL;
         net->ins = net->labels = NULL;
@@ -415,6 +414,9 @@ void bpnnet_destroy(bpnnet_t* net)
         net->unact_hides = net->unact_outs = NULL;
         net->hides       = net->outs       = NULL;
         net->hide_ds     = net->out_ds     = NULL;
+
+        net->learn_rate  = 0.0;
+        net->loss_fn     = LOSS_FN_NONE;
     }
 }
 
@@ -575,9 +577,8 @@ void bpnnet_back_propagation(bpnnet_t* net)
 }
 
 void bpnn_train(
-    double learn_rate, LossFn loss_fn,
-    bpnn_params_t* params, const double* ins_group, const double* labels_group,
-    uint32_t group_num, uint32_t epoch, double esp,
+    bpnn_params_t* params, const double* ins_group, const double* labels_group, uint32_t group_num,
+    double learn_rate, LossFn loss_fn, uint32_t epoch, double esp,
     bpnn_train_callback_t callback, void* userdata)
 {
     if (learn_rate == 0.0 || loss_fn == LOSS_FN_NONE ||
@@ -586,7 +587,7 @@ void bpnn_train(
         return;
 
     bpnnet_t net = BPNNET_INIT;
-    if (!bpnnet_construct_for_train(&net, learn_rate, loss_fn, params, NULL, NULL))
+    if (!bpnnet_construct_for_train(&net, params, NULL, NULL, learn_rate, loss_fn))
         return;
 
     bool stop = false;

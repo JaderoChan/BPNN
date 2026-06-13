@@ -84,8 +84,9 @@ int main(int argc, char* argv[])
         // 训练
         printf("- Train\n");
         bpnn_train(
-            TRAIN_LEARN_RATE, LOSS_FN_MCE, &params, ins_group, labels_group,
-            TRAIN_GROUP_NUM, TRAIN_EPOCH, TRAIN_ESP, train_callback, NULL);
+            &params, ins_group, labels_group, TRAIN_GROUP_NUM,
+            TRAIN_LEARN_RATE, LOSS_FN_MCE, TRAIN_EPOCH, TRAIN_ESP,
+            train_callback, NULL);
     }
 
     // ======

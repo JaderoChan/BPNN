@@ -124,10 +124,7 @@ typedef struct bpnnet_t
      * 是否仅用于模型使用（仅前向传播）。
      * 若为真，则 labels、hide_ds 和 out_ds 为空指针且学习率和损失函数无意义。
      */
-    bool   only_for_use;
-
-    double learn_rate;              /**< 学习率 */
-    LossFn loss_fn;                 /**< 损失函数 */
+    bool only_for_use;
 
     const bpnn_params_t* params;    /**< 神经网络参数，无所有权 */
     const double*        ins;       /**< 输入向量，无所有权 */
@@ -139,6 +136,9 @@ typedef struct bpnnet_t
     double* outs;                   /**< 激活后的输出层向量 */
     double* hide_ds;                /**< 损失函数对激活前隐藏层的偏导向量 */
     double* out_ds;                 /**< 损失函数对激活前输出层的偏导向量 */
+
+    double  learn_rate;             /**< 学习率 */
+    LossFn  loss_fn;                /**< 损失函数 */
 } bpnnet_t;
 
 #define BPNNET_INIT { \
@@ -150,10 +150,10 @@ typedef struct bpnnet_t
 }
 
 bool bpnnet_construct_for_train(
-    bpnnet_t* net, double learn_rate, LossFn loss_fn,
-    bpnn_params_t* params,
+    bpnnet_t* net, bpnn_params_t* params,
     const double*  ins    /**< Can be NULL, but must be setted before train. */,
-    const double*  labels /**< Can be NULL, but must be setted before train. */);
+    const double*  labels /**< Can be NULL, but must be setted before train. */,
+    double learn_rate, LossFn loss_fn);
 
 bool bpnnet_construct_for_use(
     bpnnet_t* net, const bpnn_params_t* params,
@@ -206,11 +206,11 @@ void bpnnet_back_propagation(bpnnet_t* net);
 
 /**
  * @brief 训练回调函数类型
- * @param epoch       当前 epoch 编号（从 1 开始）
- * @param total_epoch 总 epoch 数
- * @param curr_loss   本 epoch 的总损失值
- * @param delta_loss  本 epoch 与上一 epoch 的损失差值（第一个 epoch 为 NAN）
- * @param net         本 epoch 的神经网络状态
+ * @param epoch       当前轮编号（从 1 开始）
+ * @param total_epoch 总轮数
+ * @param curr_loss   本轮总损失值
+ * @param delta_loss  本轮与上一轮的损失差值（第一轮为 NAN）
+ * @param net         本轮神经网络状态
  * @param stop        是否停止训练
  * @param userdata    调用方传入的自定义指针
  */
@@ -221,13 +221,16 @@ typedef void (*bpnn_train_callback_t)(
     void* userdata);
 
 void bpnn_train(
-    double learn_rate, LossFn loss_fn,
-    bpnn_params_t* params          /**< [in, out] */,
+    bpnn_params_t* params          /**< [in, out] 网络参数 */,
     const double*  ins_group       /**< [in] 多组输入向量 */,
     const double*  labels_group    /**< [in] 多组真实标签向量 */,
-    uint32_t group_num, uint32_t epoch, double esp,
-    bpnn_train_callback_t callback /**< [in] 每个 epoch 结束后调用，可为 NULL */,
-    void* userdata                 /**< [in] 传递给回调的自定义指针，可为 NULL */);
+    uint32_t       group_num       /**< [in] 输入数据/真实标签数据组数 */,
+    double         learn_rate      /**< [in] 学习率 */,
+    LossFn         loss_fn         /**< [in] 损失函数 */,
+    uint32_t       epoch           /**< [in] 训练轮数 */,
+    double         esp,            /**< [in] 训练终止精度 */
+    bpnn_train_callback_t callback /**< [in] 每轮训练结束后调用，可为 NULL */,
+    void*                 userdata /**< [in] 传递给回调的自定义指针，可为 NULL */);
 
 void bpnn_use(const bpnn_params_t* params, const double* ins, double* outs);
 
@@ -296,23 +299,24 @@ static inline double relu_deriv(double x)
 }
 
 /**
- * @brief Leaky ReLU 函数
+ * @brief Leaky ReLU 函数（此处超参数 α 硬编码为 0.001）
  *
- * $$f(x)=\begin{cases}x&x\ge0\\\alpha x&x<0\end{cases}\quad0<\alpha\ll1\quad(a=1^{-9})$$
+ * $$f(x)=\begin{cases}x&x\ge0\\\alpha x&x<0\end{cases}\quad0<\alpha\ll1\quad(a=1^{-3})$$
+ * @todo 考虑超参数的设置。
  */
 static inline double leaky_relu(double x)
 {
-    return (x >= 0 ? x : (1e-9 * x));
+    return (x >= 0 ? x : (1e-3 * x));
 }
 
 /**
  * @brief Leaky ReLU 导函数
  *
- * $$f'(x)=\begin{cases}1&x\ge0\\\alpha&x\lt0\end{cases}\quad(\alpha=1^{-9})$$
+ * $$f'(x)=\begin{cases}1&x\ge0\\\alpha&x\lt0\end{cases}\quad(\alpha=1^{-3})$$
  */
 static inline double leaky_relu_deriv(double x)
 {
-    return (x >= 0 ? 1 : 1e-9);
+    return (x >= 0 ? 1 : 1e-3);
 }
 
 /**
