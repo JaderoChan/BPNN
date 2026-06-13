@@ -8,7 +8,7 @@
 #define MAX(a, b) (a > b ? a : b)
 
 bool bpnn_params_construct_v1(
-    bpnn_params_t* params, ActivationFn hide_fn, ActivationFn out_fn,
+    bpnn_params_t* params, activation_fn_t hide_fn, activation_fn_t out_fn,
     uint32_t in_num, uint32_t hide_num, uint32_t out_num)
 {
     if (!params || hide_fn == ACT_FN_NONE || out_fn == ACT_FN_NONE ||
@@ -60,7 +60,7 @@ bool bpnn_params_construct_v1(
 }
 
 bool bpnn_params_construct_v2(
-    bpnn_params_t* params, ActivationFn hide_fn, ActivationFn out_fn,
+    bpnn_params_t* params, activation_fn_t hide_fn, activation_fn_t out_fn,
     uint32_t in_num, uint32_t hide_num, uint32_t out_num,
     const double* in_hide_weights, const double* hide_out_weights,
     const double* hide_biases, const double* out_biases)
@@ -182,8 +182,8 @@ bool bpnn_params_load(bpnn_params_t* params, FILE* file)
     if (!params || !file || ferror(file))
         return false;
 
-    ActivationFn hide_fn = ACT_FN_NONE;
-    ActivationFn out_fn  = ACT_FN_NONE;
+    activation_fn_t hide_fn = ACT_FN_NONE;
+    activation_fn_t out_fn  = ACT_FN_NONE;
 
     uint32_t in_num   = 0;
     uint32_t hide_num = 0;
@@ -193,13 +193,13 @@ bool bpnn_params_load(bpnn_params_t* params, FILE* file)
 do { if (fread(ptr, size, 1, file) != 1) return false; } while(0)
 
     // Load activation function flag.
-    READ_ITEM(&hide_fn,  sizeof(ActivationFn), file);
-    READ_ITEM(&out_fn,   sizeof(ActivationFn), file);
+    READ_ITEM(&hide_fn,  sizeof(activation_fn_t), file);
+    READ_ITEM(&out_fn,   sizeof(activation_fn_t), file);
 
     // Load input layer, hide layer and output layer node num.
-    READ_ITEM(&in_num,   sizeof(uint32_t),     file);
-    READ_ITEM(&hide_num, sizeof(uint32_t),     file);
-    READ_ITEM(&out_num,  sizeof(uint32_t),     file);
+    READ_ITEM(&in_num,   sizeof(uint32_t),        file);
+    READ_ITEM(&hide_num, sizeof(uint32_t),        file);
+    READ_ITEM(&out_num,  sizeof(uint32_t),        file);
 
 #undef READ_ITEM
 
@@ -269,11 +269,11 @@ bool bpnn_params_save(const bpnn_params_t* params, FILE* file)
 #define WRITE_ITEM(ptr, size, file) \
 do { if (fwrite(ptr, size, 1, file) != 1) return false; } while(0)
 
-    WRITE_ITEM(&params->hide_fn,  sizeof(ActivationFn), file);
-    WRITE_ITEM(&params->out_fn,   sizeof(ActivationFn), file);
-    WRITE_ITEM(&params->in_num,   sizeof(uint32_t),     file);
-    WRITE_ITEM(&params->hide_num, sizeof(uint32_t),     file);
-    WRITE_ITEM(&params->out_num,  sizeof(uint32_t),     file);
+    WRITE_ITEM(&params->hide_fn,  sizeof(activation_fn_t), file);
+    WRITE_ITEM(&params->out_fn,   sizeof(activation_fn_t), file);
+    WRITE_ITEM(&params->in_num,   sizeof(uint32_t),        file);
+    WRITE_ITEM(&params->hide_num, sizeof(uint32_t),        file);
+    WRITE_ITEM(&params->out_num,  sizeof(uint32_t),        file);
 
     const size_t ws1_num = (size_t) params->in_num   * (size_t) params->hide_num;
     const size_t ws2_num = (size_t) params->hide_num * (size_t) params->out_num;
@@ -308,7 +308,7 @@ bool bpnn_params_save_to_file(const bpnn_params_t* params, const char* filepath)
 
 bool bpnnet_construct_for_train(
     bpnnet_t* net, bpnn_params_t* params, const double* ins, const double* labels,
-    double learn_rate, LossFn loss_fn)
+    double learn_rate, loss_fn_t loss_fn)
 {
     if (!net || !params || !bpnn_params_valid(params) ||
         learn_rate == 0.0 || loss_fn == LOSS_FN_NONE)
@@ -578,7 +578,7 @@ void bpnnet_back_propagation(bpnnet_t* net)
 
 void bpnn_train(
     bpnn_params_t* params, const double* ins_group, const double* labels_group, uint32_t group_num,
-    double learn_rate, LossFn loss_fn, uint32_t epoch, double esp,
+    double learn_rate, loss_fn_t loss_fn, uint32_t epoch, double esp,
     bpnn_train_callback_t callback, void* userdata)
 {
     if (learn_rate == 0.0 || loss_fn == LOSS_FN_NONE ||

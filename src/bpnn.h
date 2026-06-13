@@ -45,7 +45,7 @@
 // ======================
 
 /** @brief 激活函数枚举 */
-typedef enum ActivationFn : uint8_t
+typedef enum activation_fn_t : uint8_t
 {
     ACT_FN_NONE,
     ACT_FN_SIGMOID,
@@ -54,22 +54,22 @@ typedef enum ActivationFn : uint8_t
     ACT_FN_LEAKY_RELU,
     ACT_FN_SOFTMAX,
     ACT_FN_LINEAR
-} ActivationFn;
+} activation_fn_t;
 
 /** @brief 损失函数枚举 */
-typedef enum LossFn : uint8_t
+typedef enum loss_fn_t : uint8_t
 {
     LOSS_FN_NONE, /**< 无效值 */
     LOSS_FN_MSE,  /**< 均方误差 */
     LOSS_FN_MCE,  /**< 多分类交叉熵 */
     LOSS_FN_BCE   /**< 二元交叉熵 */
-} LossFn;
+} loss_fn_t;
 
 /** @brief BP 神经网络参数 */
 typedef struct bpnn_params_t
 {
-    ActivationFn hide_fn;       /**< 隐藏层激活函数 */
-    ActivationFn out_fn;        /**< 输出层激活函数 */
+    activation_fn_t hide_fn;    /**< 隐藏层激活函数 */
+    activation_fn_t out_fn;     /**< 输出层激活函数 */
 
     uint32_t in_num;            /**< 输入层节点数量 */
     uint32_t hide_num;          /**< 隐藏层节点数量 */
@@ -90,12 +90,12 @@ typedef struct bpnn_params_t
 
 /** @brief 根据给定参数构造 \ref bpnn_params_t，权重矩阵与偏置值向量初始化为 0 */
 bool bpnn_params_construct_v1(
-    bpnn_params_t* params, ActivationFn hide_fn, ActivationFn out_fn,
+    bpnn_params_t* params, activation_fn_t hide_fn, activation_fn_t out_fn,
     uint32_t in_num, uint32_t hide_num, uint32_t out_num);
 
 /** @brief 根据给定参数构造 \ref bpnn_params_t */
 bool bpnn_params_construct_v2(
-    bpnn_params_t* params, ActivationFn hide_fn, ActivationFn out_fn,
+    bpnn_params_t* params, activation_fn_t hide_fn, activation_fn_t out_fn,
     uint32_t in_num, uint32_t hide_num, uint32_t out_num,
     const double* in_hide_weights, const double* hide_out_weights,
     const double* hide_biases, const double* out_biases);
@@ -137,8 +137,8 @@ typedef struct bpnnet_t
     double* hide_ds;                /**< 损失函数对激活前隐藏层的偏导向量 */
     double* out_ds;                 /**< 损失函数对激活前输出层的偏导向量 */
 
-    double  learn_rate;             /**< 学习率 */
-    LossFn  loss_fn;                /**< 损失函数 */
+    double    learn_rate;           /**< 学习率 */
+    loss_fn_t loss_fn;              /**< 损失函数 */
 } bpnnet_t;
 
 #define BPNNET_INIT { \
@@ -153,7 +153,7 @@ bool bpnnet_construct_for_train(
     bpnnet_t* net, bpnn_params_t* params,
     const double*  ins    /**< Can be NULL, but must be setted before train. */,
     const double*  labels /**< Can be NULL, but must be setted before train. */,
-    double learn_rate, LossFn loss_fn);
+    double learn_rate, loss_fn_t loss_fn);
 
 bool bpnnet_construct_for_use(
     bpnnet_t* net, const bpnn_params_t* params,
@@ -226,7 +226,7 @@ void bpnn_train(
     const double*  labels_group    /**< [in] 多组真实标签向量 */,
     uint32_t       group_num       /**< [in] 输入数据/真实标签数据组数 */,
     double         learn_rate      /**< [in] 学习率 */,
-    LossFn         loss_fn         /**< [in] 损失函数 */,
+    loss_fn_t      loss_fn         /**< [in] 损失函数 */,
     uint32_t       epoch           /**< [in] 训练轮数 */,
     double         esp,            /**< [in] 训练终止精度 */
     bpnn_train_callback_t callback /**< [in] 每轮训练结束后调用，可为 NULL */,
