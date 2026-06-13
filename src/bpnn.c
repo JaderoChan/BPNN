@@ -1,7 +1,7 @@
 #include "bpnn.h"
 
 #include <assert.h> // assert
-#include <stdlib.h> // malloc, free
+#include <stdlib.h> // malloc, free, rand
 #include <time.h>   // time
 
 #define MIN(a, b) (a < b ? a : b)
