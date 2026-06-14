@@ -637,10 +637,17 @@ void bpnn_train(
             // 更新此次迭代的输入向量与真实标签向量。
             net.ins    = &ins_group[j * params->in_num];
             net.labels = &labels_group[j * params->out_num];
-            // 进行正向传播与逆向传播。
+            // 进行前向传播与反向传播。
             bpnnet_forward_propagation(&net);
             bpnnet_back_propagation(&net);
-            curr_loss += cce_loss(&net);
+            // 累计损失值。
+            switch (loss_fn)
+            {
+                case LOSS_FN_MSE: curr_loss += mse_loss(&net); break;
+                case LOSS_FN_CCE: curr_loss += cce_loss(&net); break;
+                case LOSS_FN_BCE: curr_loss += bce_loss(&net); break;
+                default: exit(BPNN_ERROR_INVALID_PARAM);
+            }
         }
 
         const double delta_loss = isnan(last_loss) ? NAN : (curr_loss - last_loss);

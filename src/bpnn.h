@@ -122,7 +122,7 @@ bool bpnn_params_save(const bpnn_params_t* params, FILE* file);
 
 bool bpnn_params_save_to_file(const bpnn_params_t* params, const char* filepath);
 
-/** @brief BP 神经网络，保存网络各节点数据，用于记录前向传播与逆向传播的中间状态 */
+/** @brief BP 神经网络，保存网络各节点数据，用于记录前向传播与反向传播的中间状态 */
 typedef struct bpnnet_t
 {
     /**
@@ -190,7 +190,7 @@ void bpnnet_comp_outs(bpnnet_t* net);
 void bpnnet_forward_propagation(bpnnet_t* net);
 
 // =========
-// > 逆向传播
+// > 反向传播
 // =========
 
 /** @brief 计算损失函数对输出层节点激活前的值的偏导 */
