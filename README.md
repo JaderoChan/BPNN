@@ -59,15 +59,15 @@ cmake --build build -j --config=Release
 ```c
 // 训练
 void bpnn_train(
-    bpnn_params_t* params, const double* ins_group, const double* labels_group, uint32_t group_num,
-    double learn_rate, LossFn loss_fn, uint32_t epoch, double esp,
-    bpnn_train_callback_t callback, void* userdata)
+    bpnn_params_t* params,
+    const double* ins_samples, const double* labels_samples, uint32_t sample_num,
+    double learn_rate, loss_fn_t loss_fn, uint32_t epoch, double esp,
+    bpnn_train_sample_callback_t sample_callback, void* sc_userdata,
+    bpnn_train_epoch_callback_t  epoch_callback,  void* ec_userdata);
 
 // 推理
 void bpnn_use(const bpnn_params_t* params, const double* ins, double* outs);
 ```
-
-`bpnn_train` 的 `callback` 参数可为 `NULL`；若提供，则在每轮结束后调用，参数包含当前损失值及与上一轮的损失差等信息。
 
 ## 示例
 

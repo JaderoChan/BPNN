@@ -61,15 +61,15 @@ cmake --build build -j --config=Release
 ```c
 // Train
 void bpnn_train(
-    bpnn_params_t* params, const double* ins_group, const double* labels_group, uint32_t group_num,
-    double learn_rate, LossFn loss_fn, uint32_t epoch, double esp,
-    bpnn_train_callback_t callback, void* userdata)
+    bpnn_params_t* params,
+    const double* ins_samples, const double* labels_samples, uint32_t sample_num,
+    double learn_rate, loss_fn_t loss_fn, uint32_t epoch, double esp,
+    bpnn_train_sample_callback_t sample_callback, void* sc_userdata,
+    bpnn_train_epoch_callback_t  epoch_callback,  void* ec_userdata);
 
 // Inference
 void bpnn_use(const bpnn_params_t* params, const double* ins, double* outs);
 ```
-
-`bpnn_train`'s `callback` parameter may be `NULL`; if provided, it is called at the end of each epoch with the current loss value and the delta from the previous epoch.
 
 ## Example
 
