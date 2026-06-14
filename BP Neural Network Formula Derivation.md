@@ -4,7 +4,7 @@
 
 Consider a **three-layer fully-connected BP neural network**.
 
-The following content is derived using **Sigmoid** and **Softmax** as activation functions of the hidden layer and output layer respectively, and **Multi-class cross-entropy** as the loss function (for single-label multi-class tasks). The use of other functions can also be deduced based on this process, which will not be described here (May be added in the future).
+The following content is derived using **Sigmoid** and **Softmax** as activation functions of the hidden layer and output layer respectively, and **Categorical Cross Entropy** as the loss function (for single-label categorical tasks). The use of other functions can also be deduced based on this process, which will not be described here (May be added in the future).
 
 $$
 \begin{aligned}
@@ -38,7 +38,7 @@ The **weighted sum** includes the bias term.
 
 ### Predefined Symbols
 
-- $L$ denotes the **loss function**, which measures the discrepancy between predicted values and true labels (the goal of training is to minimize $L$). This document uses the **multi-class cross-entropy** loss:
+- $L$ denotes the **loss function**, which measures the discrepancy between predicted values and true labels (the goal of training is to minimize $L$). This document uses the **Categorical Cross Entropy** loss:
 
 $$L=-\sum_{k=1}^ry_k\log(\hat{y}_k)$$
 
@@ -109,7 +109,7 @@ $$
 \end{aligned}
 $$
 
-For a single-label multi-class task, the label (Commonly used One-Hot) satisfies $\sum_{k'=1}^ry_{k'}=1$, so:
+For a single-label categorical task, the label (Commonly used One-Hot) satisfies $\sum_{k'=1}^ry_{k'}=1$, so:
 
 $$
 \delta_k=\hat{y}_k-y_k

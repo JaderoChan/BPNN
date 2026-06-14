@@ -639,7 +639,7 @@ void bpnn_train(
             // 进行正向传播与逆向传播。
             bpnnet_forward_propagation(&net);
             bpnnet_back_propagation(&net);
-            curr_loss += mce_loss(&net);
+            curr_loss += cce_loss(&net);
         }
 
         const double delta_loss = isnan(last_loss) ? NAN : (curr_loss - last_loss);
@@ -683,7 +683,7 @@ double mse_loss(const bpnnet_t* net)
     return sum / (double) net->params->out_num;
 }
 
-double mce_loss(const bpnnet_t* net)
+double cce_loss(const bpnnet_t* net)
 {
     assert(bpnnet_valid(net));
 

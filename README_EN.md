@@ -9,7 +9,7 @@ A three-layer fully-connected BP neural network library implemented in pure C99,
 > **Available enumeration**
 >
 > - **Activation functions**: Sigmoid, Tanh, ReLU, Leaky ReLU, Softmax, Linear
-> - **Loss functions**：MCE (Multi-class cross entropy), BCE (Binary cross entropy), MSE (Mean square error)
+> - **Loss functions**：CCE (Categorical Cross Entropy), BCE (Binary cross entropy), MSE (Mean square error)
 
 For formula derivations, see [BP Neural Network Formula Derivation](BP%20Neural%20Network%20Formula%20Derivation.md).
 
@@ -73,4 +73,4 @@ void bpnn_use(const bpnn_params_t* params, const double* ins, double* outs);
 
 ## Example
 
-An MNIST handwritten digit recognition program built on this library (Use the Sigmoid function as the hidden layer activation function, Softmax as the output layer activation function, and multi-class cross entropy as the loss function.), achieving **98%** accuracy after 50 training epochs. See [BPNN Digit Recognizer](./example/README_EN.md).
+An MNIST handwritten digit recognition program built on this library (Use the Sigmoid function as the hidden layer activation function, Softmax as the output layer activation function, and Categorical Cross Entropy as the loss function.), achieving **98%** accuracy after 50 training epochs. See [BPNN Digit Recognizer](./example/README_EN.md).

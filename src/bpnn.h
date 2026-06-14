@@ -66,7 +66,7 @@ typedef enum loss_fn_t
 {
     LOSS_FN_NONE,   /**< 无效值 */
     LOSS_FN_MSE,    /**< 均方误差 */
-    LOSS_FN_MCE,    /**< 多分类交叉熵 */
+    LOSS_FN_CCE,    /**< 多分类交叉熵 */
     LOSS_FN_BCE     /**< 二元交叉熵 */
 } loss_fn_t;
 
@@ -356,7 +356,7 @@ double mse_loss(const bpnnet_t* net);
  *
  * $$L=-\sum_{k=1}^{r}y_k\cdot\log(\hat{y}_k)$$
  */
-double mce_loss(const bpnnet_t* net);
+double cce_loss(const bpnnet_t* net);
 
 /**
  * @brief 二元交叉熵损失函数

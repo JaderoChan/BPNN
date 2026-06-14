@@ -102,7 +102,7 @@ int main(int argc, char* argv[])
 
         bpnn_train(
             &params, ins_group, labels_group, TRAIN_GROUP_NUM,
-            TRAIN_LEARN_RATE, LOSS_FN_MCE, TRAIN_EPOCH, TRAIN_ESP,
+            TRAIN_LEARN_RATE, LOSS_FN_CCE, TRAIN_EPOCH, TRAIN_ESP,
             train_callback, &et2);
 
         double sec = elapsed_timer_elapsed_sec(&et);

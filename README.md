@@ -7,7 +7,7 @@
 > **可用枚举**
 >
 > - **激活函数**：Sigmoid、Tanh、ReLU、Leaky ReLU、Softmax、Linear
-> - **损失函数**：MCE（多分类交叉熵）、BCE（二元交叉熵）、MSE（均方误差）
+> - **损失函数**：CCE（多分类交叉熵）、BCE（二元交叉熵）、MSE（均方误差）
 
 公式推导详见 [BP 神经网络公式推导](BP%20神经网络公式推导.md)。
 
