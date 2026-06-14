@@ -210,32 +210,53 @@ void bpnnet_back_propagation(bpnnet_t* net);
 // ===========
 
 /**
- * @brief 训练回调函数类型
- * @param epoch       当前轮编号（从 1 开始）
+ * @brief 训练回调函数类型：每次样本传播结束后调用
+ * @param sample       当前样本编号（索引，从 1 开始）
+ * @param total_sample 总样本数
+ * @param net          当前神经网络状态
+ * @param stop         是否停止训练
+ * @param userdata     调用方传入的自定义指针
+ */
+typedef void (*bpnn_train_sample_callback_t)(
+    uint32_t sample, uint32_t total_sample,
+    const bpnnet_t* net, bool* stop, void* userdata);
+
+/**
+ * @brief 训练回调函数类型：每轮（epoch）训练结束后调用
+ * @param epoch       当前轮编号（索引，从 1 开始）
  * @param total_epoch 总轮数
  * @param curr_loss   本轮总损失值
  * @param delta_loss  本轮与上一轮的损失差值（第一轮为 NAN）
- * @param net         本轮神经网络状态
+ * @param net         当前神经网络状态
  * @param stop        是否停止训练
  * @param userdata    调用方传入的自定义指针
  */
-typedef void (*bpnn_train_callback_t)(
+typedef void (*bpnn_train_epoch_callback_t)(
     uint32_t epoch, uint32_t total_epoch,
     double curr_loss, double delta_loss,
     const bpnnet_t* net, bool* stop,
     void* userdata);
 
+/**
+ * @param params            [in, out] 神经网络参数
+ * @param ins_samples       [in] 输入向量样本
+ * @param labels_samples    [in] 真实标签向量样本
+ * @param sample_num        [in] 输入数据/真实标签数据组的样本数量
+ * @param learn_rate        [in] 学习率
+ * @param loss_fn           [in] 损失函数
+ * @param epoch             [in] 训练轮数
+ * @param esp               [in] 训练终止精度
+ * @param sample_callback   [in] 每次样本传播结束后调用，可为 NULL
+ * @param sc_userdata       [in] 传递给 sample_callback 回调的自定义指针，可为 NULL
+ * @param epoch_callback    [in] 每轮训练结束后调用，可为 NULL
+ * @param ec_userdata       [in] 传递给 epoch_callback 回调的自定义指针，可为 NULL
+ */
 void bpnn_train(
-    bpnn_params_t* params          /**< [in, out] 网络参数 */,
-    const double*  ins_group       /**< [in] 多组输入向量 */,
-    const double*  labels_group    /**< [in] 多组真实标签向量 */,
-    uint32_t       group_num       /**< [in] 输入数据/真实标签数据组数 */,
-    double         learn_rate      /**< [in] 学习率 */,
-    loss_fn_t      loss_fn         /**< [in] 损失函数 */,
-    uint32_t       epoch           /**< [in] 训练轮数 */,
-    double         esp,            /**< [in] 训练终止精度 */
-    bpnn_train_callback_t callback /**< [in] 每轮训练结束后调用，可为 NULL */,
-    void*                 userdata /**< [in] 传递给回调的自定义指针，可为 NULL */);
+    bpnn_params_t* params,
+    const double* ins_samples, const double* labels_samples, uint32_t sample_num,
+    double learn_rate, loss_fn_t loss_fn, uint32_t epoch, double esp,
+    bpnn_train_sample_callback_t sample_callback, void* sc_userdata,
+    bpnn_train_epoch_callback_t  epoch_callback,  void* ec_userdata);
 
 void bpnn_use(const bpnn_params_t* params, const double* ins, double* outs);
 

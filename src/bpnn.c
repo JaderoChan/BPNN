@@ -767,13 +767,15 @@ void bpnnet_back_propagation(bpnnet_t* net)
 }
 
 void bpnn_train(
-    bpnn_params_t* params, const double* ins_group, const double* labels_group, uint32_t group_num,
+    bpnn_params_t* params,
+    const double* ins_samples, const double* labels_samples, uint32_t sample_num,
     double learn_rate, loss_fn_t loss_fn, uint32_t epoch, double esp,
-    bpnn_train_callback_t callback, void* userdata)
+    bpnn_train_sample_callback_t sample_callback, void* sc_userdata,
+    bpnn_train_epoch_callback_t  epoch_callback,  void* ec_userdata)
 {
     if (learn_rate == 0.0 || loss_fn == LOSS_FN_NONE ||
         !params || !bpnn_params_valid(params) ||
-        !ins_group || !labels_group || group_num == 0)
+        !ins_samples || !labels_samples || sample_num == 0)
         return;
 
     bpnnet_t net = BPNNET_INIT;
@@ -785,11 +787,11 @@ void bpnn_train(
     for (uint32_t i = 0; i < epoch; ++i)
     {
         double curr_loss = 0.0;
-        for (uint32_t j = 0; j < group_num; ++j)
+        for (uint32_t j = 0; j < sample_num; ++j)
         {
             // 更新此次迭代的输入向量与真实标签向量。
-            net.ins    = &ins_group[j * net.params->in_num];
-            net.labels = &labels_group[j * net.params->out_num];
+            net.ins    = &ins_samples[j * net.params->in_num];
+            net.labels = &labels_samples[j * net.params->out_num];
             // 进行前向传播与反向传播。
             bpnnet_forward_propagation(&net);
             bpnnet_back_propagation(&net);
@@ -801,11 +803,19 @@ void bpnn_train(
                 case LOSS_FN_BCE: curr_loss += bce_loss(&net); break;
                 default: exit(BPNN_ERROR_INVALID_PARAM);
             }
+
+            if (sample_callback)
+                sample_callback(j + 1, sample_num, &net, &stop, sc_userdata);
+            if (stop)
+            {
+                bpnnet_destroy(&net);
+                return;
+            }
         }
 
         const double delta_loss = isnan(last_loss) ? NAN : (curr_loss - last_loss);
-        if (callback)
-            callback(i + 1, epoch, curr_loss, delta_loss, &net, &stop, userdata);
+        if (epoch_callback)
+            epoch_callback(i + 1, epoch, curr_loss, delta_loss, &net, &stop, ec_userdata);
         if (stop)
             break;
 

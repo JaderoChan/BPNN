@@ -8,7 +8,7 @@
 
 #define ERROR_EXIT(msg, ec) do { fprintf(stderr, (msg)); return (ec); } while(0)
 
-static void train_callback(
+static void train_epoch_callback(
     uint32_t epoch, uint32_t total_epoch,
     double curr_loss, double delta_loss,
     const bpnnet_t* net, bool* stop, void* userdata)
@@ -103,7 +103,7 @@ int main(int argc, char* argv[])
         bpnn_train(
             &params, ins_group, labels_group, TRAIN_GROUP_NUM,
             TRAIN_LEARN_RATE, LOSS_FN_CCE, TRAIN_EPOCH, TRAIN_ESP,
-            train_callback, &et2);
+            NULL, NULL, train_epoch_callback, &et2);
 
         double sec = elapsed_timer_elapsed_sec(&et);
         printf("[Train elapsed: %lf sec]\n", sec);
