@@ -247,6 +247,7 @@ do { if (fread(ptr, size, 1, file) != 1) return false; } while(0)
         return false;
     }
 
+    bpnn_params_destroy(params);
     *params = tmp;
     return true;
 }
