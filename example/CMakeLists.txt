@@ -11,12 +11,12 @@ set(DATA_SET_DIR ${CMAKE_CURRENT_SOURCE_DIR}/data_set)
 # 训练用数据集及数量
 set(TRAIN_INPUTS_FILE  ${DATA_SET_DIR}/train-images-idx3-ubyte)
 set(TRAIN_LABELS_FILE  ${DATA_SET_DIR}/train-labels-idx1-ubyte)
-set(TRAIN_GROUP_NUM    60000)
+set(TRAIN_SAMPLE_NUM   60000)
 
 # 验证/测试用数据集及数量
 set(VERIFY_INPUTS_FILE ${DATA_SET_DIR}/t10k-images-idx3-ubyte)
 set(VERIFY_LABELS_FILE ${DATA_SET_DIR}/t10k-labels-idx1-ubyte)
-set(VERIFY_GROUP_NUM   10000)
+set(VERIFY_SAMPLE_NUM  10000)
 
 # 输入与真实标签数据集的跳过字节数（参见 README 文档）
 set(INPUTS_SKIP_BYTES  16)

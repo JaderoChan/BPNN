@@ -57,38 +57,38 @@ int main(int argc, char* argv[])
         printf("- Load train data\n");
 
         // 预分配内存
-        const size_t ins_group_bytes    = TRAIN_GROUP_NUM * INPUT_LAYER_SIZE * sizeof(double);
-        double*      ins_group          = (double*) malloc(ins_group_bytes);
-        const size_t labels_group_bytes = TRAIN_GROUP_NUM * OUTPUT_LAYER_SIZE * sizeof(double);
-        double*      labels_group       = (double*) malloc(labels_group_bytes);
+        const size_t ins_samples_bytes    = TRAIN_SAMPLE_NUM * INPUT_LAYER_SIZE  * sizeof(double);
+        double*      ins_samples          = (double*) malloc(ins_samples_bytes);
+        const size_t labels_samples_bytes = TRAIN_SAMPLE_NUM * OUTPUT_LAYER_SIZE * sizeof(double);
+        double*      labels_samples       = (double*) malloc(labels_samples_bytes);
 
-        if (!ins_group || !labels_group)
+        if (!ins_samples || !labels_samples)
         {
             bpnn_params_destroy(&params);
-            if (ins_group)    free(ins_group);
-            if (labels_group) free(labels_group);
-            ERROR_EXIT("Failed to malloc ins_group and labels_group for train.\n", 1);
+            if (ins_samples)    free(ins_samples);
+            if (labels_samples) free(labels_samples);
+            ERROR_EXIT("Failed to malloc ins_samples and labels_samples for train.\n", 1);
         }
 
         {
             // 读取训练用输入数据集。
-            const bool ok1 = load_ins_group_from_file(
-                ins_group,
+            const bool ok1 = load_ins_samples_from_file(
+                ins_samples,
                 TRAIN_INPUTS_FILE,
                 INPUTS_SKIP_BYTES,
                 INPUT_LAYER_SIZE,
-                TRAIN_GROUP_NUM);
+                TRAIN_SAMPLE_NUM);
             // 读取训练用真实标签数据集。
-            const bool ok2 = load_labels_group_from_file(
-                labels_group,
+            const bool ok2 = load_labels_samples_from_file(
+                labels_samples,
                 TRAIN_LABELS_FILE,
                 LABELS_SKIP_BYTES,
-                TRAIN_GROUP_NUM);
+                TRAIN_SAMPLE_NUM);
             if (!ok1 || !ok2)
             {
                 bpnn_params_destroy(&params);
-                free(ins_group);
-                free(labels_group);
+                free(ins_samples);
+                free(labels_samples);
                 ERROR_EXIT("Failed to load mnist data for train.\n", 1);
             }
         }
@@ -101,7 +101,7 @@ int main(int argc, char* argv[])
         elapsed_timer_reset(&et);
 
         bpnn_train(
-            &params, ins_group, labels_group, TRAIN_GROUP_NUM,
+            &params, ins_samples, labels_samples, TRAIN_SAMPLE_NUM,
             TRAIN_LEARN_RATE, LOSS_FN_CCE, TRAIN_EPOCH, TRAIN_ESP,
             NULL, NULL, train_epoch_callback, &et2);
 
@@ -120,38 +120,38 @@ int main(int argc, char* argv[])
         printf("- Load verify data\n");
 
         // 预分配内存
-        const size_t ins_group_bytes    = VERIFY_GROUP_NUM * INPUT_LAYER_SIZE * sizeof(double);
-        double*      ins_group          = (double*) malloc(ins_group_bytes);
-        const size_t labels_group_bytes = VERIFY_GROUP_NUM * OUTPUT_LAYER_SIZE * sizeof(double);
-        double*      labels_group       = (double*) malloc(labels_group_bytes);
+        const size_t ins_samples_bytes    = VERIFY_SAMPLE_NUM * INPUT_LAYER_SIZE  * sizeof(double);
+        double*      ins_samples          = (double*) malloc(ins_samples_bytes);
+        const size_t labels_samples_bytes = VERIFY_SAMPLE_NUM * OUTPUT_LAYER_SIZE * sizeof(double);
+        double*      labels_samples       = (double*) malloc(labels_samples_bytes);
 
-        if (!ins_group || !labels_group)
+        if (!ins_samples || !labels_samples)
         {
             bpnn_params_destroy(&params);
-            if (ins_group)    free(ins_group);
-            if (labels_group) free(labels_group);
-            ERROR_EXIT("Failed to malloc ins_group and labels_group for verify.\n", 1);
+            if (ins_samples)    free(ins_samples);
+            if (labels_samples) free(labels_samples);
+            ERROR_EXIT("Failed to malloc ins_samples and labels_samples for verify.\n", 1);
         }
 
         {
             // 读取验证/测试用输入数据集
-            const bool ok1 = load_ins_group_from_file(
-                ins_group,
+            const bool ok1 = load_ins_samples_from_file(
+                ins_samples,
                 VERIFY_INPUTS_FILE,
                 INPUTS_SKIP_BYTES,
                 INPUT_LAYER_SIZE,
-                VERIFY_GROUP_NUM);
+                VERIFY_SAMPLE_NUM);
             // 读取验证/测试用真实标签数据集
-            const bool ok2 = load_labels_group_from_file(
-                labels_group,
+            const bool ok2 = load_labels_samples_from_file(
+                labels_samples,
                 VERIFY_LABELS_FILE,
                 LABELS_SKIP_BYTES,
-                VERIFY_GROUP_NUM);
+                VERIFY_SAMPLE_NUM);
             if (!ok1 || !ok2)
             {
                 bpnn_params_destroy(&params);
-                free(ins_group);
-                free(labels_group);
+                free(ins_samples);
+                free(labels_samples);
                 ERROR_EXIT("Failed to load mnist data for verify.\n", 1);
             }
         }
@@ -162,10 +162,10 @@ int main(int argc, char* argv[])
 
         size_t correct = 0; // 正确数量
         double outs[OUTPUT_LAYER_SIZE] = {0.0}; // 输出向量
-        for (size_t i = 0; i < VERIFY_GROUP_NUM; ++i)
+        for (size_t i = 0; i < VERIFY_SAMPLE_NUM; ++i)
         {
-            const double* ins    = &ins_group[i * params.in_num];
-            const double* labels = &labels_group[i * params.out_num];
+            const double* ins    = &ins_samples[i * params.in_num];
+            const double* labels = &labels_samples[i * params.out_num];
             bpnn_use(&params, ins, outs);
 
             // 读取当前输出的数字
@@ -191,7 +191,7 @@ int main(int argc, char* argv[])
         printf("[Verify elapsed: %lf sec]\n", sec);
 
         // 计算并输出准确率
-        printf("Precision: %lf.\n", (double) correct / (double) VERIFY_GROUP_NUM);
+        printf("Precision: %lf.\n", (double) correct / (double) VERIFY_SAMPLE_NUM);
     }
 
     return 0;
