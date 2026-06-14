@@ -2,7 +2,7 @@
 
 考虑一个 **三层全连接 BP 神经网络**。
 
-以下内容使用 **Sigmoid** 和 **Softmax** 分别作为隐藏层和输出层的激活函数，使用 **多分类交叉熵 CCE** 作为损失函数进行推导（用于单标签多分类任务）。对于使用其他的函数的情况也可以根据这个流程进行推导，此处不赘述（未来可能补上）。
+以下内容使用 **Sigmoid** 和 **Softmax** 分别作为隐藏层和输出层的激活函数，使用 **多分类交叉熵 CCE** 作为损失函数进行推导（用于单标签多分类任务）。对于使用其他的函数的情况也可以根据这个流程进行推导，参见 [其他激活函数/损失函数的推导（追加）](#其他激活函数损失函数的推导追加)。
 
 $$
 \begin{aligned}
@@ -50,7 +50,7 @@ $$\hat{y}_k=g(z)_k=\frac{e^{z_k}}{\sum_{k'=1}^re^{z_{k'}}}$$
 
 - $\eta$ 表示 **学习率**，控制每次迭代的更新步长。
 
-## 正向传播
+## 前向传播
 
 ### 计算隐藏层节点值
 
@@ -324,3 +324,92 @@ def identify():
     # parse ys
     # ...
 ```
+
+## 其他激活函数/损失函数的推导（追加）
+
+### 使用其他函数的前向传播
+
+---
+
+使用其他激活函数或损失函数的前向传播过程与前文推导基本一致。对于隐藏层激活函数为 `f(x)`，输出层激活函数为 `g(x)` 的情况，可得：
+
+**隐藏层节点值**：
+
+$$
+z_j=\sum_{i=1}^nx_iw_{ij}+b_j\\
+h_j=f(z_j)
+$$
+
+**输出层节点值**：
+
+$$
+z_k=\sum_{j=1}^mh_jw_{jk}+b_k\\
+\hat{y}_k=g(z_k)
+$$
+
+### 使用其他函数的反向传播
+
+---
+
+使用其他激活函数或损失函数的反向传播过程，只有求 $\delta$（损失函数对某节点加权求和值的偏导）部分有所不同。
+
+#### 推导思路
+
+观察 $\delta_k$ 和 $\delta_j$ 的链式展开结构：
+
+对于 **非 Softmax** 的输出层激活函数，各输出节点的激活值彼此独立，根据链式法则可将 $\delta_k$ 分解为两个相互独立的因子之积：
+
+$$\delta_k = \frac{\partial L}{\partial z_k} = \underbrace{\frac{\partial L}{\partial \hat{y}_k}}_{\text{仅由损失函数决定}} \cdot \underbrace{g'(z_k)}_{\text{仅由输出层激活函数决定}}$$
+
+$\delta_j$ 的结构同理：
+
+$$\delta_j = \underbrace{f'(z_j)}_{\text{仅由隐藏层激活函数决定}} \cdot \sum_{k=1}^r\delta_k w_{jk}$$
+
+三个因子完全相互独立，对于不同激活函数与损失函数的搭配只需要模块化组合不同因子即可。
+
+#### 各函数对应的因子
+
+> 代码中出现的另外两个损失函数的定义：
+>
+> | 损失函数 | 定义 |
+> | ------- | --- |
+> | 均方误差 MSE | $L=\frac{1}{r}\displaystyle\sum_{k=1}^{r}(y_k-\hat{y}_k)^2$ |
+> | 二元交叉熵 BCE | $L=-\frac{1}{r}\displaystyle\sum_{k=1}^r\left[y_k\log(\hat{y}_k)+(1-y_k)\log(1-\hat{y}_k)\right]$ |
+
+**损失函数的 $\frac{\partial L}{\partial \hat{y}_k}$**：
+
+| 损失函数 | $\frac{\partial L}{\partial \hat{y}_k}$ |
+| ------- | --------------------------------------- |
+| CCE | $-\frac{y_k}{\hat{y}_k}$ |
+| MSE | $\frac{2(\hat{y}_k-y_k)}{r}$ |
+| BCE | $\frac{1}{r}\cdot\frac{\hat{y}_k-y_k}{\hat{y}_k(1-\hat{y}_k)}$ |
+
+**输出层激活函数的 $g'(z_k)$**：
+
+| 输出层激活函数 | $g'(z_k)$ |
+| ------------ | --------- |
+| Sigmoid | $\hat{y}_k(1-\hat{y}_k)$ |
+| Tanh | $1-\hat{y}_k^2$ |
+| ReLU | $\mathbb{I}[z_k>0]$ |
+| Leaky ReLU | $\begin{cases}1 & z_k>0\\ \alpha & z_k\leq 0\end{cases}$ |
+| Linear | $1$ |
+
+**各隐藏层激活函数的 $f'(z_j)$**：
+
+| 隐藏层激活函数 | $f'(z_j)$ |
+| ------------ | --------- |
+| Sigmoid | $h_j(1-h_j)$ |
+| Tanh | $1-h_j^2$ |
+| ReLU | $\mathbb{I}[z_j>0]$ |
+| Leaky ReLU | $\begin{cases}1 & z_j>0\\ \alpha & z_j\leq 0\end{cases}$ |
+| Linear | $1$ |
+
+#### 组合使用
+
+查表得到所需因子后，代入下式即可：
+
+$$\delta_k = \frac{\partial L}{\partial \hat{y}_k} \cdot g'(z_k)$$
+
+$$\delta_j = f'(z_j)\sum_{k=1}^r\delta_k w_{jk}$$
+
+之后的权重与偏置梯度计算，以及参数更新方式与正文完全相同，不再复述。

@@ -2,50 +2,50 @@
 
 > This document was translated by AI.
 
-Consider a **three-layer fully-connected BP neural network**.
+Consider a **three-layer fully connected BP neural network**.
 
-The following content is derived using **Sigmoid** and **Softmax** as activation functions of the hidden layer and output layer respectively, and **Categorical Cross Entropy** as the loss function (for single-label categorical tasks). The use of other functions can also be deduced based on this process, which will not be described here (May be added in the future).
+The following derivation uses **Sigmoid** and **Softmax** as the activation functions for the hidden layer and output layer respectively, and **Categorical Cross-Entropy (CCE)** as the loss function (for single-label multi-class classification tasks). The same process can be applied when using other functions, see also [Derivation for Other Activation/Loss Functions (Appendix)](#derivation-for-other-activationloss-functions-appendix).
 
 $$
 \begin{aligned}
-\text{Input layer:}\;&\underbrace{x_1,\;x_2,\;\cdots\;x_i}_n\\
-&\downarrow W_1\\
-\text{Hidden layer:}\;&\underbrace{h_1,\;h_2,\;\cdots\;h_j}_m\\
-&\downarrow W_2\\
-\text{Output layer:}\;&\underbrace{\hat{y}_1,\;\hat{y}_2,\;\cdots\;\hat{y}_k}_r\\
+\text{Input layer:}\quad\underbrace{x_1,\;x_2,\;\cdots \;x_i}_n\\
+\downarrow W_1\\
+\text{Hidden layer:}\quad\underbrace{h_1,\;h_2,\;\cdots \;h_j}_m\\
+\downarrow W_2\\
+\text{Output layer:}\quad\underbrace{\hat{y}_1,\;\hat{y}_2,\;\cdots \;\hat{y}_k}_r\\
 \end{aligned}
 $$
 
 ## Symbol Definitions
 
 | Category | Symbol | Count | Meaning |
-| --- | --- | --- | --- |
-| **Input layer** | $x_i$ | $n,\;i\in[1,n]$ | Value of the $i$-th input node |
-| **Hidden layer** | $h_j$ | $m,\;j\in[1,m]$ | Post-activation value of the $j$-th hidden node |
-| **Output layer** | $\hat{y}_k$ | $r,\;k\in[1,r]$ | Post-activation predicted value of the $k$-th output node |
-| **True label** | $y_k$ | - | True label value for the $k$-th output node |
-| **Input–hidden weights** | $w_{ij}$ | - | Weight from the $i$-th input node to the $j$-th hidden node |
-| **Hidden–output weights** | $w_{jk}$ | - | Weight from the $j$-th hidden node to the $k$-th output node |
-| **Hidden layer biases** | $b_j$ | - | Bias of the $j$-th hidden node |
-| **Output layer biases** | $b_k$ | - | Bias of the $k$-th output node |
+| -------- | ------ | ----- | ------- |
+| **Input layer** | $x_i$ | $n,i\in[1,n]$ | Input value of the $i$-th input node |
+| **Hidden layer** | $h_j$ | $m,j\in[1,m]$ | Activated value of the $j$-th hidden node |
+| **Output layer** | $\hat{y}_k$ | $r,k\in[1,r]$ | Predicted value of the $k$-th output node after activation |
+| **True label** | $y_k$ | - | True label value of the $k$-th output node |
+| **Input-to-hidden weights** | $w_{ij}$ | - | Weight from the $i$-th input node to the $j$-th hidden node |
+| **Hidden-to-output weights** | $w_{jk}$ | - | Weight from the $j$-th hidden node to the $k$-th output node |
+| **Hidden layer bias** | $b_j$ | - | Bias of the $j$-th hidden node |
+| **Output layer bias** | $b_k$ | - | Bias of the $k$-th output node |
 
-### Intermediate Symbols
+### Intermediate Variable Symbols
 
-- $z_j$: the **weighted sum** of the $j$-th hidden node (pre-activation value of the hidden layer)
-- $z_k$: the **weighted sum** of the $k$-th output node (pre-activation value of the output layer)
+- $z_j$ denotes the **weighted sum** of the $j$-th hidden node (value before activation)
+- $z_k$ denotes the **weighted sum** of the $k$-th output node (value before activation)
 
 The **weighted sum** includes the bias term.
 
 ### Predefined Symbols
 
-- $L$ denotes the **loss function**, which measures the discrepancy between predicted values and true labels (the goal of training is to minimize $L$). This document uses the **Categorical Cross Entropy** loss:
+- $L$ denotes the **loss function**, used to measure the discrepancy between predicted values and true labels (the training objective is to minimize the loss). This document uses the **Categorical Cross-Entropy (CCE)** loss function:
 
 $$L=-\sum_{k=1}^ry_k\log(\hat{y}_k)$$
 
 - $f(\cdot)$ denotes the hidden layer **activation function**.
 - $g(\cdot)$ denotes the output layer **activation function**.
 
-This document uses **Sigmoid** for the hidden layer and **Softmax** for the output layer:
+In this document, the hidden layer uses the **Sigmoid** function, and the output layer uses the **Softmax** function:
 
 $$h_j=f(z_j)=\frac{1}{1+e^{-z_j}}$$
 $$\hat{y}_k=g(z)_k=\frac{e^{z_k}}{\sum_{k'=1}^re^{z_{k'}}}$$
@@ -54,43 +54,43 @@ $$\hat{y}_k=g(z)_k=\frac{e^{z_k}}{\sum_{k'=1}^re^{z_{k'}}}$$
 
 ## Forward Propagation
 
-### Computing Hidden Layer Values
+### Computing Hidden Layer Node Values
 
 $$
 z_j=\sum_{i=1}^nx_iw_{ij}+b_j\\
 h_j=f(z_j)
 $$
 
-### Computing Output Layer Values
+### Computing Output Layer Node Values
 
 $$
 z_k=\sum_{j=1}^mh_jw_{jk}+b_k\\
 \hat{y}_k=\frac{e^{z_k}}{\sum_{k'=1}^re^{z_{k'}}}
 $$
 
-## Backward Propagation
+## Backpropagation
 
-Define $\delta$ as the partial derivative of the loss function with respect to the weighted sum ($z_j$ or $z_k$) of a given node, distinguished by subscripts $j$ (hidden layer) and $k$ (output layer).
+Define $\delta$ as the partial derivative of the loss function with respect to the weighted sum of a given node ($z_j$ or $z_k$). Subscripts $j$ and $k$ distinguish between the hidden layer and output layer respectively.
 
-### Partial Derivative of Loss w.r.t. Output Layer Weighted Sums
+### Partial Derivative of the Loss w.r.t. the Output Layer Weighted Sum
 
 $$
 \delta_k=\frac{\partial L}{\partial z_k}
 $$
 
-Since Softmax components are mutually coupled, we differentiate over all output components simultaneously. For any $k'$:
+Since the components of Softmax are coupled with each other, they must be differentiated jointly. For any $k'$:
 
 $$
 \frac{\partial \hat{y}_{k'}}{\partial z_k}=\hat{y}_{k'}(\mathbb{I}_{k'k}-\hat{y}_k)
 $$
 
-where $\mathbb{I}_{k'k}$ is an indicator function equal to $1$ when $k'=k$:
+where $\mathbb{I}_{k'k}$ is the indicator function. When $k'=k$, it equals $1$:
 
 $$
 \frac{\partial \hat{y}_{k'}}{\partial z_k}=\hat{y}_k(1-\hat{y}_k)
 $$
 
-and $0$ otherwise:
+Otherwise it equals $0$:
 
 $$
 \frac{\partial \hat{y}_{k'}}{\partial z_k}=-\hat{y}_{k'}\cdot \hat{y}_k
@@ -104,22 +104,22 @@ $$
 &=\frac{\partial L}{\partial z_k}
 =\sum_{k'=1}^r\frac{\partial L}{\partial \hat{y}_{k'}}\frac{\partial \hat{y}_{k'}}{\partial z_k}\\
 &=\sum_{k'=1}^r\left(-\frac{y_{k'}}{\hat{y}_{k'}}\right)\hat{y}_{k'}(\mathbb{I}_{k'k}-\hat{y}_k)\\
-&=(-(y_k)(1-\hat{y}_k))+(y_{k'}\hat{y}_k)+\cdots\\
+&=(-(y_k)(1-\hat{y}_k))+(y_{k'}\hat{y}_k)+...\\
 &=-y_k+\hat{y}_k\sum_{k'=1}^ry_{k'}
 \end{aligned}
 $$
 
-For a single-label categorical task, the label (Commonly used One-Hot) satisfies $\sum_{k'=1}^ry_{k'}=1$, so:
+In a single-label multi-class task, the labels (commonly One-Hot encoded) satisfy $\sum_{k'=1}^ry_{k'}=1$, so:
 
 $$
 \delta_k=\hat{y}_k-y_k
 $$
 
-### Partial Derivative of Loss w.r.t. Hidden Layer Weighted Sums
+### Partial Derivative of the Loss w.r.t. the Hidden Layer Weighted Sum
 
 $$\delta_j=\frac{\partial L}{\partial z_j}$$
 
-Since the $j$-th hidden node influences all $r$ output nodes:
+Because the $j$-th hidden node influences all $r$ output nodes:
 
 $$
 \delta_j=\sum_{k=1}^r\frac{\partial L}{\partial z_k}\cdot \frac{\partial z_k}{\partial h_j}\cdot \frac{\partial h_j}{\partial z_j}
@@ -139,29 +139,29 @@ Factoring out $f'(z_j)$:
 
 $$\delta_j=f'(z_j)\sum_{k=1}^r\delta_kw_{jk}$$
 
-### Gradients of the Loss w.r.t. Each Parameter
+### Partial Derivatives of the Loss w.r.t. Each Parameter
 
-Having obtained $\delta_j$ and $\delta_k$, computing the gradients of the loss with respect to all weights and biases becomes straightforward.
+Having derived $\delta_j$ and $\delta_k$, computing the partial derivatives of the loss with respect to the weights and biases of each layer becomes straightforward.
 
-The partial derivatives of the loss with respect to each parameter are collectively called **gradients**. At each iteration, moving one step of size $\eta$ in the negative gradient direction approximates a local minimum of the loss function.
+The partial derivatives of the loss with respect to all parameters are collectively referred to as **gradients**. In each iteration, moving one step of size $\eta$ (the learning rate) in the negative gradient direction brings us closer to a local minimum of the loss function.
 
-#### Gradient of Hidden–Output Weights $w_{jk}$
+#### Gradient of Hidden-to-Output Weights $w_{jk}$
 
 $$\frac{\partial L}{\partial w_{jk}}=\frac{\partial L}{\partial z_k}\frac{\partial z_k}{\partial w_{jk}}=\delta_kh_j$$
 
-#### Gradient of Output Layer Biases $b_k$
+#### Gradient of Output Layer Bias $b_k$
 
 $$\frac{\partial L}{\partial b_k}=\frac{\partial L}{\partial z_k}\frac{\partial z_k}{\partial b_k}=\delta_k$$
 
-#### Gradient of Input–Hidden Weights $w_{ij}$
+#### Gradient of Input-to-Hidden Weights $w_{ij}$
 
 $$\frac{\partial L}{\partial w_{ij}}=\frac{\partial L}{\partial z_j}\frac{\partial z_j}{\partial w_{ij}}=\delta_jx_i$$
 
-#### Gradient of Hidden Layer Biases $b_j$
+#### Gradient of Hidden Layer Bias $b_j$
 
 $$\frac{\partial L}{\partial b_j}=\frac{\partial L}{\partial z_j}\frac{\partial z_j}{\partial b_j}=\delta_j$$
 
-### Parameter Update
+### Updating Parameters
 
 With all gradients computed, update each parameter by moving $\eta$ steps in the negative gradient direction:
 
@@ -212,7 +212,7 @@ def loss():
     loss_sum = 0.0
     tiny = 1e-12
     for k in range(r):
-        # log() may get extreme when the parameter is close to 0; clamp to a minimum value.
+        # log() maybe got extreme when the parameter passed close to 0, fix up by limit parameter's minimum.
         y_prob = max(ys[k], tiny)
         loss_sum += labels[k] * math.log(y_prob)
 
@@ -326,3 +326,92 @@ def identify():
     # parse ys
     # ...
 ```
+
+## Derivation for Other Activation/Loss Functions (Appendix)
+
+### Forward Propagation with Other Functions
+
+---
+
+The forward propagation process when using other activation or loss functions is essentially the same as derived above. For a hidden layer activation function $f(x)$ and an output layer activation function $g(x)$:
+
+**Hidden layer node values**:
+
+$$
+z_j=\sum_{i=1}^nx_iw_{ij}+b_j\\
+h_j=f(z_j)
+$$
+
+**Output layer node values**:
+
+$$
+z_k=\sum_{j=1}^mh_jw_{jk}+b_k\\
+\hat{y}_k=g(z_k)
+$$
+
+### Backpropagation with Other Functions
+
+---
+
+When using other activation or loss functions, only the computation of $\delta$ (the partial derivative of the loss w.r.t. a node's weighted sum) differs.
+
+#### Derivation Strategy
+
+Observe the chain rule expansion of $\delta_k$ and $\delta_j$:
+
+For **non-Softmax** output layer activation functions, the activated values of each output node are mutually independent. By the chain rule, $\delta_k$ can be decomposed into the product of two independent factors:
+
+$$\delta_k = \frac{\partial L}{\partial z_k} = \underbrace{\frac{\partial L}{\partial \hat{y}_k}}_{\text{determined solely by the loss function}} \cdot \underbrace{g'(z_k)}_{\text{determined solely by the output activation function}}$$
+
+The structure of $\delta_j$ is analogous:
+
+$$\delta_j = \underbrace{f'(z_j)}_{\text{determined solely by the hidden activation function}} \cdot \sum_{k=1}^r\delta_k w_{jk}$$
+
+The three factors are completely independent of each other. For different combinations of activation and loss functions, simply look up and substitute the corresponding factors.
+
+#### Factors for Each Function
+
+> Definitions of the other two loss functions appearing in the code:
+>
+> | Loss Function | Definition |
+> | ------------- | ---------- |
+> | Mean Squared Error (MSE) | $L=\frac{1}{r}\displaystyle\sum_{k=1}^{r}(y_k-\hat{y}_k)^2$ |
+> | Binary Cross-Entropy (BCE) | $L=-\frac{1}{r}\displaystyle\sum_{k=1}^r\left[y_k\log(\hat{y}_k)+(1-y_k)\log(1-\hat{y}_k)\right]$ |
+
+**$\frac{\partial L}{\partial \hat{y}_k}$ for each loss function**:
+
+| Loss Function | $\frac{\partial L}{\partial \hat{y}_k}$ |
+| ------------- | --------------------------------------- |
+| CCE | $-\frac{y_k}{\hat{y}_k}$ |
+| MSE | $\frac{2(\hat{y}_k-y_k)}{r}$ |
+| BCE | $\frac{1}{r}\cdot\frac{\hat{y}_k-y_k}{\hat{y}_k(1-\hat{y}_k)}$ |
+
+**$g'(z_k)$ for each output layer activation function**:
+
+| Output Activation Function | $g'(z_k)$ |
+| -------------------------- | --------- |
+| Sigmoid | $\hat{y}_k(1-\hat{y}_k)$ |
+| Tanh | $1-\hat{y}_k^2$ |
+| ReLU | $\mathbb{I}[z_k>0]$ |
+| Leaky ReLU | $\begin{cases}1 & z_k>0\\ \alpha & z_k\leq 0\end{cases}$ |
+| Linear | $1$ |
+
+**$f'(z_j)$ for each hidden layer activation function**:
+
+| Hidden Activation Function | $f'(z_j)$ |
+| -------------------------- | --------- |
+| Sigmoid | $h_j(1-h_j)$ |
+| Tanh | $1-h_j^2$ |
+| ReLU | $\mathbb{I}[z_j>0]$ |
+| Leaky ReLU | $\begin{cases}1 & z_j>0\\ \alpha & z_j\leq 0\end{cases}$ |
+| Linear | $1$ |
+
+#### Combining Factors
+
+After looking up the required factors, substitute them into the following formulas:
+
+$$\delta_k = \frac{\partial L}{\partial \hat{y}_k} \cdot g'(z_k)$$
+
+$$\delta_j = f'(z_j)\sum_{k=1}^r\delta_k w_{jk}$$
+
+The subsequent gradient computations for weights and biases, as well as the parameter update procedure, are identical to the main derivation and are not repeated here.
