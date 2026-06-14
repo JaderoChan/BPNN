@@ -29,11 +29,11 @@ double elapsed_timer_elapsed_sec_reset(elapsed_timer_t* et)
 uint64_t elapsed_timer_elapsed_ms(const elapsed_timer_t* et)
 {
     const double e = elapsed_timer_elapsed_sec(et);
-    return (e < 0 ? (uint64_t) -1 : (uint64_t) (e * 1000));
+    return (e < 0.0 ? (uint64_t) -1 : (uint64_t) (e * 1000.0));
 }
 
 uint64_t elapsed_timer_elapsed_ms_reset(elapsed_timer_t* et)
 {
     const double e = elapsed_timer_elapsed_sec_reset(et);
-    return (e < 0 ? (uint64_t) -1 : (uint64_t) (e * 1000));
+    return (e < 0.0 ? (uint64_t) -1 : (uint64_t) (e * 1000.0));
 }

@@ -57,8 +57,8 @@ typedef enum activation_fn_t
     ACT_FN_TANH,
     ACT_FN_RELU,
     ACT_FN_LEAKY_RELU,
-    ACT_FN_SOFTMAX,     /**< 仅可用于输出层 */
-    ACT_FN_LINEAR
+    ACT_FN_LINEAR,
+    ACT_FN_SOFTMAX  /**< 仅可用于输出层，且仅可搭配 CCE 进行训练 */
 } activation_fn_t;
 
 /** @brief 损失函数枚举 */
@@ -66,7 +66,7 @@ typedef enum loss_fn_t
 {
     LOSS_FN_NONE,   /**< 无效值 */
     LOSS_FN_MSE,    /**< 均方误差 */
-    LOSS_FN_CCE,    /**< 多分类交叉熵 */
+    LOSS_FN_CCE,    /**< 多分类交叉熵，使用要求：\hat{y}_k\in(0,1]且\sum_{k=1}^r\hat{y}_k=1 */
     LOSS_FN_BCE     /**< 二元交叉熵 */
 } loss_fn_t;
 
@@ -303,6 +303,8 @@ static inline double relu_deriv(double x)
     return (x <= 0.0 ? 0.0 : 1.0);
 }
 
+#define BPNN_LEAKY_RELU_ALPHA 1e-3
+
 /**
  * @brief Leaky ReLU 函数（此处超参数 α 硬编码为 0.001）
  *
@@ -311,7 +313,7 @@ static inline double relu_deriv(double x)
  */
 static inline double leaky_relu(double x)
 {
-    return (x >= 0 ? x : (1e-3 * x));
+    return (x >= 0.0 ? x : (BPNN_LEAKY_RELU_ALPHA * x));
 }
 
 /**
@@ -321,7 +323,7 @@ static inline double leaky_relu(double x)
  */
 static inline double leaky_relu_deriv(double x)
 {
-    return (x >= 0 ? 1 : 1e-3);
+    return (x >= 0.0 ? 1.0 : BPNN_LEAKY_RELU_ALPHA);
 }
 
 /**
