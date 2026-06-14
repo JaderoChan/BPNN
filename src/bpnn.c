@@ -8,12 +8,13 @@
 
 #define MIN(a, b) (a < b ? a : b)
 #define MAX(a, b) (a > b ? a : b)
+#define SQUARE(x) ((x) * (x))
 
 bool bpnn_params_construct_v1(
     bpnn_params_t* params, activation_fn_t hide_fn, activation_fn_t out_fn,
     uint32_t in_num, uint32_t hide_num, uint32_t out_num)
 {
-    if (!params || hide_fn == ACT_FN_NONE || out_fn == ACT_FN_NONE ||
+    if (!params || hide_fn == ACT_FN_NONE || hide_fn == ACT_FN_SOFTMAX || out_fn == ACT_FN_NONE ||
         in_num == 0 || hide_num == 0 || out_num == 0)
         return false;
 
@@ -67,7 +68,7 @@ bool bpnn_params_construct_v2(
     const double* in_hide_weights, const double* hide_out_weights,
     const double* hide_biases, const double* out_biases)
 {
-    if (!params || hide_fn == ACT_FN_NONE || out_fn == ACT_FN_NONE ||
+    if (!params || hide_fn == ACT_FN_NONE || hide_fn == ACT_FN_SOFTMAX || out_fn == ACT_FN_NONE ||
         in_num == 0 || hide_num == 0 || out_num == 0 ||
         !in_hide_weights || !hide_out_weights || !hide_biases || !out_biases)
         return false;
@@ -137,7 +138,8 @@ void bpnn_params_destroy(bpnn_params_t* params)
 bool bpnn_params_valid(const bpnn_params_t* params)
 {
     return (
-        params && params->hide_fn != ACT_FN_NONE && params->out_fn != ACT_FN_NONE &&
+        params && params->hide_fn != ACT_FN_NONE && params->hide_fn != ACT_FN_SOFTMAX &&
+        params->out_fn != ACT_FN_NONE &&
         params->in_num != 0 && params->hide_num != 0 && params->out_num != 0 &&
         params->in_hide_weights && params->hide_out_weights &&
         params->hide_biases && params->out_biases
@@ -461,8 +463,20 @@ void bpnnet_comp_hides(bpnnet_t* net)
 {
     assert(bpnnet_valid(net));
 
+    double (*act_fn)(double) = NULL;
+    switch (net->params->hide_fn)
+    {
+        case ACT_FN_SIGMOID:    act_fn = &sigmoid;    break;
+        case ACT_FN_TANH:       act_fn = &tanh;       break;
+        case ACT_FN_RELU:       act_fn = &relu;       break;
+        case ACT_FN_LEAKY_RELU: act_fn = &leaky_relu; break;
+        case ACT_FN_LINEAR:     act_fn = &linear;     break;
+        case ACT_FN_SOFTMAX: // Fallthrough: only for output layer.
+        default: exit(BPNN_ERROR_INVALID_PARAM);
+    }
+
     for (uint32_t i = 0; i < net->params->hide_num; ++i)
-        net->hides[i] = sigmoid(net->unact_hides[i]);
+        net->hides[i] = act_fn(net->unact_hides[i]);
 }
 
 void bpnnet_comp_unact_outs(bpnnet_t* net)
@@ -487,16 +501,36 @@ void bpnnet_comp_outs(bpnnet_t* net)
 {
     assert(bpnnet_valid(net));
 
-    const uint32_t n = net->params->out_num;
-    double max_unact_out = net->unact_outs[0];
-    for (uint32_t i = 0; i < n; ++i)
-        if (net->unact_outs[i] > max_unact_out) max_unact_out = net->unact_outs[i];
+    if (net->params->out_fn == ACT_FN_SOFTMAX)
+    {
+        const uint32_t n = net->params->out_num;
+        double max_unact_out = net->unact_outs[0];
+        for (uint32_t i = 0; i < n; ++i)
+            if (net->unact_outs[i] > max_unact_out) max_unact_out = net->unact_outs[i];
 
-    double sum = 0.0;
-    for (uint32_t i = 0; i < n; ++i)
-        sum += exp(net->unact_outs[i] - max_unact_out);
-    for (uint32_t i = 0; i < n; ++i)
-        net->outs[i] = exp(net->unact_outs[i] - max_unact_out) / sum;
+        double sum = 0.0;
+        for (uint32_t i = 0; i < n; ++i)
+            sum += exp(net->unact_outs[i] - max_unact_out);
+        for (uint32_t i = 0; i < n; ++i)
+            net->outs[i] = exp(net->unact_outs[i] - max_unact_out) / sum;
+
+        return;
+    }
+
+    double (*act_fn)(double) = NULL;
+    switch (net->params->out_fn)
+    {
+        case ACT_FN_SIGMOID:    act_fn = &sigmoid;    break;
+        case ACT_FN_TANH:       act_fn = &tanh;       break;
+        case ACT_FN_RELU:       act_fn = &relu;       break;
+        case ACT_FN_LEAKY_RELU: act_fn = &leaky_relu; break;
+        case ACT_FN_LINEAR:     act_fn = &linear;     break;
+        case ACT_FN_SOFTMAX: // Fallthrough: already caught above.
+        default: exit(BPNN_ERROR_INVALID_PARAM);
+    }
+
+    for (uint32_t i = 0; i < net->params->out_num; ++i)
+        net->outs[i] = act_fn(net->unact_outs[i]);
 }
 
 void bpnnet_forward_propagation(bpnnet_t* net)
@@ -605,7 +639,7 @@ void bpnn_train(
             // 进行正向传播与逆向传播。
             bpnnet_forward_propagation(&net);
             bpnnet_back_propagation(&net);
-            curr_loss += loss(&net);
+            curr_loss += mce_loss(&net);
         }
 
         const double delta_loss = isnan(last_loss) ? NAN : (curr_loss - last_loss);
@@ -638,7 +672,18 @@ void bpnn_use(const bpnn_params_t* params, const double* ins, double* outs)
     bpnnet_destroy(&net);
 }
 
-double loss(const bpnnet_t* net)
+double mse_loss(const bpnnet_t* net)
+{
+    assert(bpnnet_valid(net));
+
+    double sum = 0.0;
+    for (uint32_t i = 0; i < net->params->out_num; ++i)
+        sum += SQUARE(net->labels[i] - net->outs[i]);
+
+    return sum / (double) net->params->out_num;
+}
+
+double mce_loss(const bpnnet_t* net)
 {
     assert(bpnnet_valid(net));
 
@@ -651,4 +696,21 @@ double loss(const bpnnet_t* net)
         sum += net->labels[i] * log(out);
     }
     return -sum;
+}
+
+double bce_loss(const bpnnet_t* net)
+{
+    assert(bpnnet_valid(net));
+
+    const double tiny = 1e-12;
+    double sum = 0.0;
+    for (uint32_t i = 0; i < net->params->out_num; ++i)
+    {
+        const double out         = MAX(net->outs[i], tiny);
+        const double one_dec_out = MAX(1.0 - net->outs[i], tiny);
+        const double label       = net->labels[i];
+        sum += label * log(out) + (1.0 - label) * log(one_dec_out);
+    }
+
+    return -1.0 / (double) net->params->out_num * sum;
 }

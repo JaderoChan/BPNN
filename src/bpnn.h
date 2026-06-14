@@ -43,6 +43,8 @@ extern "C"
 {
 #endif
 
+#define BPNN_ERROR_INVALID_PARAM -1
+
 // ======================
 // > BP 神经网络相关数据结构
 // ======================
@@ -55,17 +57,17 @@ typedef enum activation_fn_t
     ACT_FN_TANH,
     ACT_FN_RELU,
     ACT_FN_LEAKY_RELU,
-    ACT_FN_SOFTMAX,
+    ACT_FN_SOFTMAX,     /**< 仅可用于输出层 */
     ACT_FN_LINEAR
 } activation_fn_t;
 
 /** @brief 损失函数枚举 */
 typedef enum loss_fn_t
 {
-    LOSS_FN_NONE, /**< 无效值 */
-    LOSS_FN_MSE,  /**< 均方误差 */
-    LOSS_FN_MCE,  /**< 多分类交叉熵 */
-    LOSS_FN_BCE   /**< 二元交叉熵 */
+    LOSS_FN_NONE,   /**< 无效值 */
+    LOSS_FN_MSE,    /**< 均方误差 */
+    LOSS_FN_MCE,    /**< 多分类交叉熵 */
+    LOSS_FN_BCE     /**< 二元交叉熵 */
 } loss_fn_t;
 
 /** @brief BP 神经网络参数 */
@@ -343,11 +345,25 @@ static inline double linear_deriv(double x)
     return 1.0;
 }
 
+/**
+ * @brief 均方误差损失函数
+ *
+ * $$L=\frac{1}{r}\sum_{k=1}^{r}(y_k-\hat{y}_k)^2$$
+ */
+double mse_loss(const bpnnet_t* net);
+
 /** @brief 多分类交叉熵损失函数
  *
  * $$L=-\sum_{k=1}^{r}y_k\cdot\log(\hat{y}_k)$$
  */
-double loss(const bpnnet_t* net);
+double mce_loss(const bpnnet_t* net);
+
+/**
+ * @brief 二元交叉熵损失函数
+ *
+ * $$L=-\frac{1}{r}\sum_{k=1}^r[y_k\log(\hat{y}_k)+(1-y_k)\log(1-\hat{y}_k)]$$
+ */
+double bce_loss(const bpnnet_t* net);
 
 #ifdef __cplusplus
 }
