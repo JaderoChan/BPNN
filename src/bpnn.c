@@ -316,7 +316,8 @@ bool bpnnet_construct_for_train(
     double learn_rate, loss_fn_t loss_fn)
 {
     if (!net || !params || !bpnn_params_valid(params) ||
-        learn_rate == 0.0 || loss_fn == LOSS_FN_NONE)
+        learn_rate == 0.0 || loss_fn == LOSS_FN_NONE ||
+        (params->out_fn == ACT_FN_SOFTMAX && loss_fn != LOSS_FN_CCE))
         return false;
 
     const size_t hide_bytes = (size_t) params->hide_num * sizeof(double);
@@ -427,17 +428,30 @@ void bpnnet_destroy(bpnnet_t* net)
 
 bool bpnnet_valid(const bpnnet_t* net)
 {
-    if (net)
+    if (net && net->params && bpnn_params_valid(net->params))
     {
-        bool ok =
-            net->learn_rate != 0.0 && net->loss_fn != LOSS_FN_NONE &&
-            net->labels && net->hide_ds && net->out_ds;
-        ok = net->only_for_use ? true : ok;
-        return (
-            ok && net->params && bpnn_params_valid(net->params) && net->ins &&
-            net->unact_hides && net->unact_outs &&
-            net->hides       && net->outs
-        );
+        if (net->only_for_use)
+        {
+            return (
+                net->ins &&
+                net->unact_hides && net->unact_outs &&
+                net->hides       && net->outs
+            );
+        }
+        else
+        {
+            const bool ok =
+                net->params->out_fn == ACT_FN_SOFTMAX ?
+                net->loss_fn == LOSS_FN_CCE :
+                true;
+            return (
+                ok && net->learn_rate != 0.0 && net->loss_fn != LOSS_FN_NONE &&
+                net->ins && net->labels &&
+                net->unact_hides && net->unact_outs &&
+                net->hides       && net->outs &&
+                net->hide_ds     && net->out_ds
+            );
+        }
     }
     return false;
 }
@@ -472,7 +486,7 @@ void bpnnet_comp_hides(bpnnet_t* net)
         case ACT_FN_RELU:       act_fn = &relu;       break;
         case ACT_FN_LEAKY_RELU: act_fn = &leaky_relu; break;
         case ACT_FN_LINEAR:     act_fn = &linear;     break;
-        case ACT_FN_SOFTMAX: // Fallthrough: only for output layer.
+        case ACT_FN_SOFTMAX: // Fallthrough, only for output layer.
         default: exit(BPNN_ERROR_INVALID_PARAM);
     }
 
@@ -526,7 +540,7 @@ void bpnnet_comp_outs(bpnnet_t* net)
         case ACT_FN_RELU:       act_fn = &relu;       break;
         case ACT_FN_LEAKY_RELU: act_fn = &leaky_relu; break;
         case ACT_FN_LINEAR:     act_fn = &linear;     break;
-        case ACT_FN_SOFTMAX: // Fallthrough: already caught above.
+        case ACT_FN_SOFTMAX: // Fallthrough, already caught above.
         default: exit(BPNN_ERROR_INVALID_PARAM);
     }
 
@@ -546,16 +560,125 @@ void bpnnet_comp_out_ds(bpnnet_t* net)
 {
     assert(bpnnet_valid(net) && !net->only_for_use);
 
-    for (uint32_t i = 0; i < net->params->out_num; ++i)
-        net->out_ds[i] = net->outs[i] - net->labels[i];
+    const loss_fn_t       loss_fn = net->loss_fn;
+    const activation_fn_t act_fn  = net->params->out_fn;
+
+    #define FOREACH_OUTDS for (uint32_t i = 0; i < net->params->out_num; ++i) net->out_ds[i]
+    #define OUT_NUM   (net->params->out_num)
+    #define LABEL     (net->labels[i])
+    #define OUT       (net->outs[i])
+    #define UNACT_OUT (net->unact_outs[i])
+
+    switch (loss_fn)
+    {
+        case LOSS_FN_MSE:
+        {
+            switch (act_fn)
+            {
+                case ACT_FN_LINEAR:
+                    FOREACH_OUTDS = 2.0 * (OUT - LABEL) / OUT_NUM;
+                    break;
+                case ACT_FN_RELU:
+                    FOREACH_OUTDS =
+                        UNACT_OUT > 0.0 ?
+                        (2.0 * (OUT - LABEL) / OUT_NUM) :
+                        0.0;
+                    break;
+                case ACT_FN_LEAKY_RELU:
+                    FOREACH_OUTDS =
+                        UNACT_OUT > 0.0 ?
+                        (2.0 * (OUT - LABEL) / OUT_NUM) :
+                        BPNN_LEAKY_RELU_ALPHA;
+                    break;
+                case ACT_FN_TANH:
+                    FOREACH_OUTDS = (2.0 * (OUT - LABEL) / OUT_NUM) * (1.0 - SQUARE(OUT));
+                    break;
+                case ACT_FN_SIGMOID:
+                    FOREACH_OUTDS = (2.0 * (OUT - LABEL) / OUT_NUM) * OUT * (1.0 - OUT);
+                    break;
+                case ACT_FN_SOFTMAX: // Fallthrough, only use with CCE.
+                default:
+                    exit(BPNN_ERROR_INVALID_PARAM);
+            }
+            break;
+        }
+        case LOSS_FN_CCE:
+        {
+            switch (act_fn)
+            {
+                case ACT_FN_SOFTMAX:
+                    FOREACH_OUTDS = OUT - LABEL;
+                    break;
+                case ACT_FN_SIGMOID:
+                    FOREACH_OUTDS = -(LABEL * (1.0 - OUT));
+                    break;
+                case ACT_FN_TANH:
+                    FOREACH_OUTDS = -(LABEL * (1.0 - SQUARE(OUT)) / OUT);
+                    break;
+                case ACT_FN_RELU:
+                    FOREACH_OUTDS = UNACT_OUT > 0.0 ? -(LABEL / OUT) : 0.0;
+                    break;
+                case ACT_FN_LEAKY_RELU:
+                    FOREACH_OUTDS = UNACT_OUT > 0.0 ? -(LABEL / OUT) : BPNN_LEAKY_RELU_ALPHA;
+                    break;
+                case ACT_FN_LINEAR:
+                    FOREACH_OUTDS = -(LABEL / OUT);
+                    break;
+                default:
+                    exit(BPNN_ERROR_INVALID_PARAM);
+            }
+            break;
+        }
+        case LOSS_FN_BCE:
+        {
+            switch (act_fn)
+            {
+                case ACT_FN_SIGMOID:
+                    FOREACH_OUTDS = (OUT - LABEL) / OUT_NUM;
+                    break;
+                case ACT_FN_TANH:
+                    FOREACH_OUTDS = (OUT - LABEL) * (1.0 + OUT) / (OUT * OUT_NUM);
+                    break;
+                case ACT_FN_LINEAR:
+                    FOREACH_OUTDS = (OUT - LABEL) / (OUT * OUT_NUM * (1.0 - OUT));
+                    break;
+                case ACT_FN_RELU:
+                    FOREACH_OUTDS =
+                        UNACT_OUT > 0.0 ?
+                        (OUT - LABEL) / (OUT * OUT_NUM * (1.0 - OUT)) :
+                        0.0;
+                    break;
+                case ACT_FN_LEAKY_RELU:
+                    FOREACH_OUTDS =
+                        UNACT_OUT > 0.0 ?
+                        (OUT - LABEL) / (OUT * OUT_NUM * (1.0 - OUT)) :
+                        BPNN_LEAKY_RELU_ALPHA;
+                    break;
+                case ACT_FN_SOFTMAX: // Fallthrough, only use with CCE.
+                default:
+                    exit(BPNN_ERROR_INVALID_PARAM);
+            }
+            break;
+        }
+        default: exit(BPNN_ERROR_INVALID_PARAM);
+    }
+
+    #undef UNACT_OUT
+    #undef OUT
+    #undef LABEL
+    #undef OUT_NUM
+    #undef FOREACH_OUTDS
 }
 
 void bpnnet_comp_hide_ds(bpnnet_t* net)
 {
     assert(bpnnet_valid(net) && !net->only_for_use);
 
+    const activation_fn_t act_fn  = net->params->hide_fn;
+
     const uint32_t n = net->params->hide_num;
     const uint32_t m = net->params->out_num;
+
     for (uint32_t i = 0; i < n; ++i)
     {
         net->hide_ds[i] = 0.0;
@@ -564,6 +687,36 @@ void bpnnet_comp_hide_ds(bpnnet_t* net)
             const size_t w_idx = i * m + j;
             net->hide_ds[i] += net->out_ds[j] * net->params->hide_out_weights[w_idx];
         }
+
+        #define HIDE_DS    net->hide_ds[i]
+        #define HIDE       net->hides[i]
+        #define UNACT_HIDE net->unact_hides[i]
+
+        switch (act_fn)
+        {
+            case ACT_FN_SIGMOID:
+                HIDE_DS *= (HIDE * (1.0 - HIDE));
+                break;
+            case ACT_FN_TANH:
+                HIDE_DS *= (1.0 - SQUARE(HIDE));
+                break;
+            case ACT_FN_RELU:
+                HIDE_DS *= (UNACT_HIDE > 0.0 ? 1.0 : 0.0);
+                break;
+            case ACT_FN_LEAKY_RELU:
+                HIDE_DS *= (UNACT_HIDE > 0.0 ? 1.0 : BPNN_LEAKY_RELU_ALPHA);
+                break;
+            case ACT_FN_LINEAR:
+                // HIDE_DS *= 1.0;
+                break;
+            case ACT_FN_SOFTMAX: // Fallthrough, only for output layer.
+            default:
+                exit(BPNN_ERROR_INVALID_PARAM);
+        }
+
+        #undef UNACT_HIDE
+        #undef HIDE
+        #undef HIDE_DS
         net->hide_ds[i] *= sigmoid_deriv(net->unact_hides[i]);
     }
 }
@@ -635,13 +788,13 @@ void bpnn_train(
         for (uint32_t j = 0; j < group_num; ++j)
         {
             // 更新此次迭代的输入向量与真实标签向量。
-            net.ins    = &ins_group[j * params->in_num];
-            net.labels = &labels_group[j * params->out_num];
+            net.ins    = &ins_group[j * net.params->in_num];
+            net.labels = &labels_group[j * net.params->out_num];
             // 进行前向传播与反向传播。
             bpnnet_forward_propagation(&net);
             bpnnet_back_propagation(&net);
             // 累计损失值。
-            switch (loss_fn)
+            switch (net.loss_fn)
             {
                 case LOSS_FN_MSE: curr_loss += mse_loss(&net); break;
                 case LOSS_FN_CCE: curr_loss += cce_loss(&net); break;
