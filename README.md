@@ -34,7 +34,7 @@ cmake --build build -j --config=Release
 
 ### 构建示例程序
 
-若需同时构建示例程序，请先解压 `example/data_set/` 下的数据集压缩包，再开启对应选项：
+若需同时构建示例程序，请先解压 `example/digit_recognizer/data_set/` 下的数据集压缩包，再开启对应选项：
 
 ```sh
 cmake -B build -DCMAKE_BUILD_TYPE=Release -DBPNN_BUILD_EXAMPLE=ON
@@ -71,4 +71,4 @@ void bpnn_use(const bpnn_params_t* params, const double* ins, double* outs);
 
 ## 示例
 
-基于本库实现的 MNIST 手写数字识别程序（使用 Sigmoid 函数作为隐藏层激活函数，Softmax 作为输出层激活函数，多分类交叉熵作为损失函数），50 轮训练后准确率可达 **98%**，详见 [BPNN Digit Recognizer](./example/README.md)。
+基于本库实现的 MNIST 手写数字识别程序（使用 Sigmoid 函数作为隐藏层激活函数，Softmax 作为输出层激活函数，多分类交叉熵作为损失函数），50 轮训练后准确率可达 **98%**，详见 [BPNN Digit Recognizer](./example/digit_recognizer/README.md)。

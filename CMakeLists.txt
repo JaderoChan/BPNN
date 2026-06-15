@@ -14,5 +14,5 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/sr
 
 option(BPNN_BUILD_EXAMPLE "Build the digit recognizer example use BPNN." ON)
 if(BPNN_BUILD_EXAMPLE)
-    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/example)
+    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/example/digit_recognizer)
 endif()

@@ -36,7 +36,7 @@ Output: static library `libbpnn.a`, header at `src/bpnn.h`.
 
 ### Build the Example
 
-To build the example program, first extract the dataset archives under `example/data_set/`, then enable the option:
+To build the example program, first extract the dataset archives under `example/digit_recognizer/data_set/`, then enable the option:
 
 ```sh
 cmake -B build -DCMAKE_BUILD_TYPE=Release -DBPNN_BUILD_EXAMPLE=ON
@@ -73,4 +73,4 @@ void bpnn_use(const bpnn_params_t* params, const double* ins, double* outs);
 
 ## Example
 
-An MNIST handwritten digit recognition program built on this library (Use the Sigmoid function as the hidden layer activation function, Softmax as the output layer activation function, and Categorical Cross Entropy as the loss function.), achieving **98%** accuracy after 50 training epochs. See [BPNN Digit Recognizer](./example/README_EN.md).
+An MNIST handwritten digit recognition program built on this library (Use the Sigmoid function as the hidden layer activation function, Softmax as the output layer activation function, and Categorical Cross Entropy as the loss function.), achieving **98%** accuracy after 50 training epochs. See [BPNN Digit Recognizer](./example/digit_recognizer/README_EN.md).
