@@ -66,7 +66,7 @@ typedef enum loss_fn_t
 {
     LOSS_FN_NONE,   /**< 无效值 */
     LOSS_FN_MSE,    /**< 均方误差 */
-    LOSS_FN_CCE,    /**< 多分类交叉熵，使用要求：\hat{y}_k\in(0,1]且\sum_{k=1}^r\hat{y}_k=1 */
+    LOSS_FN_CCE,    /**< 多分类交叉熵。使用要求：保证输出值范围位于 (0,1]，且输出值和为 1 */
     LOSS_FN_BCE     /**< 二元交叉熵 */
 } loss_fn_t;
 
@@ -156,13 +156,13 @@ typedef struct bpnnet_t
 
 bool bpnnet_construct_for_train(
     bpnnet_t* net, bpnn_params_t* params,
-    const double*  ins    /**< Can be NULL, but must be setted before train. */,
-    const double*  labels /**< Can be NULL, but must be setted before train. */,
+    const double*  ins,    /**< Can be NULL, but must be setted before train. */
+    const double*  labels, /**< Can be NULL, but must be setted before train. */
     double learn_rate, loss_fn_t loss_fn);
 
 bool bpnnet_construct_for_use(
     bpnnet_t* net, const bpnn_params_t* params,
-    const double* ins     /**< Can be NULL, but must be setted before use. */);
+    const double* ins      /**< Can be NULL, but must be setted before use. */);
 
 /** @brief 释放指定 \ref bpnnet_t 对象具备所有权的成员 */
 void bpnnet_destroy(bpnnet_t* net);
