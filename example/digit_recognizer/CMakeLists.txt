@@ -1,0 +1,5 @@
+add_subdirectory(train)
+option(BUILD_DIGIT_RECOGNIZER_USE "Build the digit recognizer use." OFF)
+if(BUILD_DIGIT_RECOGNIZER_USE)
+    add_subdirectory(use)
+endif()
