@@ -69,4 +69,4 @@ bool bpnn_predict(const bpnn_params_t* params, const double* ins, double* outs);
 
 ## 示例
 
-基于本库实现的 MNIST 手写数字识别程序（使用 Sigmoid 函数作为隐藏层激活函数，Softmax 作为输出层激活函数，多分类交叉熵作为损失函数），50 轮训练后准确率可达 **98%**，详见 [BPNN Digit Recognizer](./example/digit_recognizer/README.md)。
+基于本库实现的 MNIST 手写数字识别程序（使用 Sigmoid 函数作为隐藏层激活函数，Softmax 作为输出层激活函数，多分类交叉熵作为损失函数），50 轮训练后准确率可达 **98%**，详见 [BPNN Digit Recognizer](example/digit_recognizer/README.md)。

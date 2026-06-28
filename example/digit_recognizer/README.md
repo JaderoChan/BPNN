@@ -54,5 +54,5 @@ cmke --build build -j --config=Release
 
 迭代 50 轮后，测试集准确率可达 **98%**，训练大约需要五分钟时间。
 
-![train_result](./images/train_result.png)
-![predict_result](./images/predict_result.png)
+![train_result](images/train_result.png)
+![predict_result](images/predict_result.png)

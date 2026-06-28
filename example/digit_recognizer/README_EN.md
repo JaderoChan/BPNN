@@ -56,5 +56,5 @@ cmake --build build -j --config=Release
 
 After 50 epochs, the model achieves **98%** accuracy on the test set. Training takes approximately five minutes.
 
-![train_result](./images/train_result.png)
-![predict_result](./images/predict_result.png)
+![train_result](images/train_result.png)
+![predict_result](images/predict_result.png)
