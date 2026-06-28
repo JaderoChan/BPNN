@@ -343,26 +343,26 @@ bool bpnnet_construct_for_train(
         return false;
     }
 
-    net->only_for_use   = false;
+    net->only_for_predict = false;
 
-    net->params         = params;
-    net->ins            = ins;
-    net->labels         = labels;
+    net->params           = params;
+    net->ins              = ins;
+    net->labels           = labels;
 
-    net->unact_hides    = unact_hides;
-    net->unact_outs     = unact_outs;
-    net->hides          = hides;
-    net->outs           = outs;
-    net->hide_ds        = hide_ds;
-    net->out_ds         = out_ds;
+    net->unact_hides      = unact_hides;
+    net->unact_outs       = unact_outs;
+    net->hides            = hides;
+    net->outs             = outs;
+    net->hide_ds          = hide_ds;
+    net->out_ds           = out_ds;
 
-    net->learn_rate     = learn_rate;
-    net->loss_fn        = loss_fn;
+    net->learn_rate       = learn_rate;
+    net->loss_fn          = loss_fn;
 
     return true;
 }
 
-bool bpnnet_construct_for_use(bpnnet_t* net, const bpnn_params_t* params, const double* ins)
+bool bpnnet_construct_for_predict(bpnnet_t* net, const bpnn_params_t* params, const double* ins)
 {
     if (!net || !params || !bpnn_params_valid(params))
         return false;
@@ -384,21 +384,21 @@ bool bpnnet_construct_for_use(bpnnet_t* net, const bpnn_params_t* params, const 
         return false;
     }
 
-    net->only_for_use   = true;
+    net->only_for_predict = true;
 
-    net->params         = params;
-    net->ins            = ins;
-    net->labels         = NULL;
+    net->params           = params;
+    net->ins              = ins;
+    net->labels           = NULL;
 
-    net->unact_hides    = unact_hides;
-    net->unact_outs     = unact_outs;
-    net->hides          = hides;
-    net->outs           = outs;
-    net->hide_ds        = NULL;
-    net->out_ds         = NULL;
+    net->unact_hides      = unact_hides;
+    net->unact_outs       = unact_outs;
+    net->hides            = hides;
+    net->outs             = outs;
+    net->hide_ds          = NULL;
+    net->out_ds           = NULL;
 
-    net->learn_rate     = 0.0;
-    net->loss_fn        = LOSS_FN_NONE;
+    net->learn_rate       = 0.0;
+    net->loss_fn          = LOSS_FN_NONE;
 
     return true;
 }
@@ -414,7 +414,7 @@ void bpnnet_destroy(bpnnet_t* net)
         if (net->hide_ds)       free(net->hide_ds);
         if (net->out_ds)        free(net->out_ds);
 
-        net->only_for_use = false;
+        net->only_for_predict = false;
 
         net->params = NULL;
         net->ins = net->labels = NULL;
@@ -432,7 +432,7 @@ bool bpnnet_valid(const bpnnet_t* net)
 {
     if (net && net->params && bpnn_params_valid(net->params))
     {
-        if (net->only_for_use)
+        if (net->only_for_predict)
         {
             return (
                 net->ins &&
@@ -560,16 +560,16 @@ void bpnnet_forward_propagation(bpnnet_t* net)
 
 void bpnnet_comp_out_ds(bpnnet_t* net)
 {
-    assert(bpnnet_valid(net) && !net->only_for_use);
+    assert(bpnnet_valid(net) && !net->only_for_predict);
 
     const loss_fn_t       loss_fn = net->loss_fn;
     const activation_fn_t act_fn  = net->params->out_fn;
 
     #define FOREACH_OUTDS for (uint32_t i = 0; i < net->params->out_num; ++i) net->out_ds[i]
-    #define OUT_NUM   (net->params->out_num)
-    #define LABEL     (net->labels[i])
-    #define OUT       (net->outs[i])
-    #define UNACT_OUT (net->unact_outs[i])
+    #define OUT_NUM       (net->params->out_num)
+    #define LABEL         (net->labels[i])
+    #define OUT           (net->outs[i])
+    #define UNACT_OUT     (net->unact_outs[i])
 
     switch (loss_fn)
     {
@@ -674,7 +674,7 @@ void bpnnet_comp_out_ds(bpnnet_t* net)
 
 void bpnnet_comp_hide_ds(bpnnet_t* net)
 {
-    assert(bpnnet_valid(net) && !net->only_for_use);
+    assert(bpnnet_valid(net) && !net->only_for_predict);
 
     const activation_fn_t act_fn  = net->params->hide_fn;
 
@@ -725,7 +725,7 @@ void bpnnet_comp_hide_ds(bpnnet_t* net)
 
 void bpnnet_update_params(bpnnet_t* net)
 {
-    assert(bpnnet_valid(net) && !net->only_for_use);
+    assert(bpnnet_valid(net) && !net->only_for_predict);
 
     bpnn_params_t* params = (bpnn_params_t*) net->params;
     const uint32_t n = params->in_num;
@@ -831,13 +831,13 @@ bool bpnn_train(
     return true;
 }
 
-bool bpnn_use(const bpnn_params_t* params, const double* ins, double* outs)
+bool bpnn_predict(const bpnn_params_t* params, const double* ins, double* outs)
 {
     if (!params || !bpnn_params_valid(params) || !ins || !outs)
         return false;
 
     bpnnet_t net = BPNNET_INIT;
-    if (!bpnnet_construct_for_use(&net, params, ins))
+    if (!bpnnet_construct_for_predict(&net, params, ins))
         return false;
 
     bpnnet_forward_propagation(&net);

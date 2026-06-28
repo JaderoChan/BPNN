@@ -172,7 +172,7 @@ int main(int argc, char* argv[])
         {
             const double* ins    = &ins_samples[i * params.in_num];
             const double* labels = &labels_samples[i * params.out_num];
-            const bool ok = bpnn_use(&params, ins, outs);
+            const bool ok = bpnn_predict(&params, ins, outs);
             if (!ok)
             {
                 bpnn_params_destroy(&params);

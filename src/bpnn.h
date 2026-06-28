@@ -27,7 +27,7 @@
  * @file bpnn.h
  * @brief 一个纯 C99 实现的三层全连接 BP 神经网络库，无任何第三方依赖，出于学习目的创建
  * @author 頔珞 JaderoChan
- * @version 1.1.1
+ * @version 1.2.0
  */
 
 #ifndef BPNN_H
@@ -126,10 +126,10 @@ bool bpnn_params_save_to_file(const bpnn_params_t* params, const char* filepath)
 typedef struct bpnnet_t
 {
     /**
-     * 是否仅用于模型使用（仅前向传播），
+     * 是否仅用于模型使用（仅前向传播预测），
      * 若为真，则 labels、hide_ds 和 out_ds 为空指针且学习率和损失函数无意义
      */
-    bool only_for_use;
+    bool only_for_predict;
 
     const bpnn_params_t* params;    /**< 神经网络参数，无所有权 */
     const double*        ins;       /**< 输入向量，无所有权 */
@@ -147,7 +147,7 @@ typedef struct bpnnet_t
 } bpnnet_t;
 
 #define BPNNET_INIT { \
-    .only_for_use = false, .learn_rate = 0.0, .loss_fn = LOSS_FN_NONE, \
+    .only_for_predict = false, .learn_rate = 0.0, .loss_fn = LOSS_FN_NONE, \
     .params = NULL, .ins = NULL, .labels = NULL, \
     .unact_hides = NULL, .unact_outs = NULL, \
     .hides = NULL,       .outs = NULL, \
@@ -160,7 +160,7 @@ bool bpnnet_construct_for_train(
     const double*  labels, /**< Can be NULL, but must be setted before train. */
     double learn_rate, loss_fn_t loss_fn);
 
-bool bpnnet_construct_for_use(
+bool bpnnet_construct_for_predict(
     bpnnet_t* net, const bpnn_params_t* params,
     const double* ins      /**< Can be NULL, but must be setted before use. */);
 
@@ -258,7 +258,7 @@ bool bpnn_train(
     bpnn_train_sample_callback_t sample_callback, void* sc_userdata,
     bpnn_train_epoch_callback_t  epoch_callback,  void* ec_userdata);
 
-bool bpnn_use(const bpnn_params_t* params, const double* ins, double* outs);
+bool bpnn_predict(const bpnn_params_t* params, const double* ins, double* outs);
 
 // =========
 // > 工具函数
