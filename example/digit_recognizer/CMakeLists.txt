@@ -33,7 +33,7 @@ configure_file(
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)
 
 add_subdirectory(digit_recognizer_train)
-option(BUILD_DIGIT_RECOGNIZER_GUI "Build the digit recognizer gui." ON)
+option(BUILD_DIGIT_RECOGNIZER_GUI "Build the digit recognizer GUI" OFF)
 if(BUILD_DIGIT_RECOGNIZER_GUI)
     add_subdirectory(digit_recognizer_gui)
 endif()
