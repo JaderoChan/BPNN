@@ -1,4 +1,4 @@
-project(digit_recognizer_model_train LANGUAGES C)
+project(digit_recognizer_train LANGUAGES C)
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
