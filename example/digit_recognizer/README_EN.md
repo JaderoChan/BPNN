@@ -27,31 +27,34 @@ All images are 28×28 grayscale, pixel values stored as `uint8_t`, files in IDX 
 | `t10k-images-idx3-ubyte` | Test images (same format as training set) | 10,000 |
 | `t10k-labels-idx1-ubyte` | Test labels (same format as training set) | 10,000 |
 
-Extract the archives under `train/data_set/` before use.
-
-## Use
-
-There is a digit recognizer project implemented based on **Qt** in the `./use` directory. `./use/bpnn_net_params/net_params.np` is the result of 50 rounds of training and can be used by the digit recognizer.
-
 ## Build
 
-By default only the `train` project will be built
+> Before building, extract the archives in the `data_set/` directory.
+
+By default, only the model training and testing module is built.
 
 ```sh
 cmake -B build
-cmake --build build
+cmake --build build -j --config=Release
 ```
 
-If you need to build a `use` project (number recognizer based on **Qt**), you need to ensure that **Qt** (can be used by Qt5/Qt6) is visible in the build environment
+To build the **Digit Recognizer GUI**, ensure **Qt** (Qt5 or Qt6) is available in the build environment.
 
 ```sh
-cmake -B build -DBUILD_DIGIT_RECOGNIZER_USE=ON
-cmke --build build
+cmake -B build -DBUILD_DIGIT_RECOGNIZER_GUI=ON
+cmake --build build -j --config=Release
 ```
+
+## Usage
+
+1. Run the model training program to train, test, and save the model.
+2. Run the GUI application, load the trained model file, and recognize handwritten digits.
+
+> A pre-trained model file is available in the `models/` directory and can be loaded directly by the GUI.
 
 ## Results
 
-After 50 training epochs, the model achieves **98%** accuracy on the test set, the train takes about five minutes.
+After 50 epochs, the model achieves **98%** accuracy on the test set. Training takes approximately five minutes.
 
 ![train_result](./images/train_result.png)
-![use_result](./images/use_result.png)
+![predict_result](./images/predict_result.png)

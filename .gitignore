@@ -24,7 +24,7 @@ install/
 
 *.log
 
-# 忽略示例程序中解压后的数据集文件。
-example/digit_recognizer/train/data_set/*-ubyte
-# 忽略示例程序中 CMake 配置后的 config 头文件。
-example/digit_recognizer/train/src/config.h
+# 忽略 digit recognizer 示例程序中解压后的数据集文件。
+example/digit_recognizer/data_set/*-ubyte
+# 忽略 digit recognizer 示例程序中 CMake 配置后的 config 头文件。
+example/digit_recognizer/include/config.h

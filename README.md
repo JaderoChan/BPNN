@@ -30,8 +30,6 @@ cmake -B build -DCMAKE_BUILD_TYPE=Release -DBPNN_BUILD_EXAMPLE=OFF
 cmake --build build -j --config=Release
 ```
 
-构建产物为静态库 `libbpnn.a`，头文件位于 `src/bpnn.h`。
-
 ### 构建示例程序
 
 若需同时构建示例程序，请先解压 `example/digit_recognizer/data_set/` 下的数据集压缩包，再开启对应选项：
@@ -58,15 +56,15 @@ cmake --build build -j --config=Release
 
 ```c
 // 训练
-void bpnn_train(
+bool bpnn_train(
     bpnn_params_t* params,
     const double* ins_samples, const double* labels_samples, uint32_t sample_num,
     double learn_rate, loss_fn_t loss_fn, uint32_t epoch, double esp,
     bpnn_train_sample_callback_t sample_callback, void* sc_userdata,
     bpnn_train_epoch_callback_t  epoch_callback,  void* ec_userdata);
 
-// 推理
-void bpnn_use(const bpnn_params_t* params, const double* ins, double* outs);
+// 推理预测
+bool bpnn_predict(const bpnn_params_t* params, const double* ins, double* outs);
 ```
 
 ## 示例

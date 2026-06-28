@@ -314,7 +314,7 @@ def train(epoch, eps):
         last_loss = curr_loss
         epoch -= 1
 
-def identify():
+def predict():
     # Forward propagation
     comp_zs1()
     comp_hs()

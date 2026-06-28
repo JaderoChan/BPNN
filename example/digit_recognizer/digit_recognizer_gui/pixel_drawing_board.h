@@ -40,7 +40,6 @@ protected:
     void leaveEvent(QEvent* event) override;
     void mouseMoveEvent(QMouseEvent* event) override;
     void mousePressEvent(QMouseEvent* event) override;
-    void mouseReleaseEvent(QMouseEvent* event) override;
     void wheelEvent(QWheelEvent* event) override;
     void resizeEvent(QResizeEvent* event) override;
     void paintEvent(QPaintEvent* event) override;
@@ -51,14 +50,13 @@ private:
     void applyBrushColor();
 
     QImage image_;
-    int    brushSize_      = 5;
-    int    brushColor_     = -128;
+    int    brushSize_      = 0;
+    int    brushColor_     = 0;
     qreal  gridLineWidth_  = 0.1;
     QColor gridLineColor_  = Qt::white;
 
     QSizeF pixelSize_;
     bool   isEntered_     = false;
-    bool   isPressed_     = false;
     QPointF       cursorPos_;
     QList<QPoint> brushPts_;
 };

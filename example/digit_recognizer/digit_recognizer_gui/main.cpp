@@ -5,6 +5,8 @@
 int main(int argc, char* argv[])
 {
     QApplication a(argc, argv);
+    a.setApplicationName("Digit Recognizer GUI");
+    a.setApplicationDisplayName("Digit Recognizer GUI");
 
     MainWidget w;
     w.show();

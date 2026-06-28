@@ -2,9 +2,9 @@
 #include <stdlib.h>
 
 #include <bpnn.h>
-#include "config.h"
-#include "elapsed_timer.h"
+#include <config.h>
 #include "mnist_loader.h"
+#include "elapsed_timer.h"
 
 #define ERROR_EXIT(msg, ec) do { fprintf(stderr, (msg)); return (ec); } while(0)
 
@@ -76,14 +76,14 @@ int main(int argc, char* argv[])
             const bool ok1 = load_ins_samples_from_file(
                 ins_samples,
                 TRAIN_INPUTS_FILE,
-                INPUTS_SKIP_BYTES,
+                INPUTS_FILE_SKIP_BYTES,
                 INPUT_LAYER_SIZE,
                 TRAIN_SAMPLE_NUM);
             // 读取训练用真实标签数据集。
             const bool ok2 = load_labels_samples_from_file(
                 labels_samples,
                 TRAIN_LABELS_FILE,
-                LABELS_SKIP_BYTES,
+                LABELS_FILE_SKIP_BYTES,
                 TRAIN_SAMPLE_NUM);
             if (!ok1 || !ok2)
             {
@@ -94,7 +94,7 @@ int main(int argc, char* argv[])
             }
         }
 
-        // 训练。使用多分类交叉熵函数作为损失函数。
+        // 模型训练（使用多分类交叉熵函数作为损失函数）
         printf("- Train\n");
 
         elapsed_timer_t et2 = ELAPSED_TIMER_INIT;
@@ -116,19 +116,19 @@ int main(int argc, char* argv[])
     }
 
     // ======
-    // > 验证
+    // > 测试
     // ======
 
-    printf(">>> Verify\n");
+    printf(">>> Test\n");
 
     {
-        // 读取验证数据
-        printf("- Load verify data\n");
+        // 读取测试数据
+        printf("- Load test data\n");
 
         // 预分配内存
-        const size_t ins_samples_bytes    = VERIFY_SAMPLE_NUM * INPUT_LAYER_SIZE  * sizeof(double);
+        const size_t ins_samples_bytes    = TEST_SAMPLE_NUM * INPUT_LAYER_SIZE  * sizeof(double);
         double*      ins_samples          = (double*) malloc(ins_samples_bytes);
-        const size_t labels_samples_bytes = VERIFY_SAMPLE_NUM * OUTPUT_LAYER_SIZE * sizeof(double);
+        const size_t labels_samples_bytes = TEST_SAMPLE_NUM * OUTPUT_LAYER_SIZE * sizeof(double);
         double*      labels_samples       = (double*) malloc(labels_samples_bytes);
 
         if (!ins_samples || !labels_samples)
@@ -136,39 +136,39 @@ int main(int argc, char* argv[])
             bpnn_params_destroy(&params);
             if (ins_samples)    free(ins_samples);
             if (labels_samples) free(labels_samples);
-            ERROR_EXIT("Failed to malloc ins_samples and labels_samples for verify.\n", 1);
+            ERROR_EXIT("Failed to malloc ins_samples and labels_samples for test.\n", 1);
         }
 
         {
-            // 读取验证/测试用输入数据集
+            // 读取测试用输入数据集
             const bool ok1 = load_ins_samples_from_file(
                 ins_samples,
-                VERIFY_INPUTS_FILE,
-                INPUTS_SKIP_BYTES,
+                TEST_INPUTS_FILE,
+                INPUTS_FILE_SKIP_BYTES,
                 INPUT_LAYER_SIZE,
-                VERIFY_SAMPLE_NUM);
-            // 读取验证/测试用真实标签数据集
+                TEST_SAMPLE_NUM);
+            // 读取测试用真实标签数据集
             const bool ok2 = load_labels_samples_from_file(
                 labels_samples,
-                VERIFY_LABELS_FILE,
-                LABELS_SKIP_BYTES,
-                VERIFY_SAMPLE_NUM);
+                TEST_LABELS_FILE,
+                LABELS_FILE_SKIP_BYTES,
+                TEST_SAMPLE_NUM);
             if (!ok1 || !ok2)
             {
                 bpnn_params_destroy(&params);
                 free(ins_samples);
                 free(labels_samples);
-                ERROR_EXIT("Failed to load mnist data for verify.\n", 1);
+                ERROR_EXIT("Failed to load mnist data for test.\n", 1);
             }
         }
 
-        // 验证
-        printf("- Verify\n");
+        // 模型测试
+        printf("- Test\n");
         elapsed_timer_reset(&et);
 
         size_t correct = 0; // 正确数量
         double outs[OUTPUT_LAYER_SIZE] = {0.0}; // 输出向量
-        for (size_t i = 0; i < VERIFY_SAMPLE_NUM; ++i)
+        for (size_t i = 0; i < TEST_SAMPLE_NUM; ++i)
         {
             const double* ins    = &ins_samples[i * params.in_num];
             const double* labels = &labels_samples[i * params.out_num];
@@ -176,10 +176,10 @@ int main(int argc, char* argv[])
             if (!ok)
             {
                 bpnn_params_destroy(&params);
-                ERROR_EXIT("Failed to use.\n", 1);
+                ERROR_EXIT("Failed to predict.\n", 1);
             }
 
-            // 读取当前输出的数字
+            // 解析当前输出的数字
             int num = -1;
             for (int n = 0; n < OUTPUT_LAYER_SIZE; ++n)
             {
@@ -187,7 +187,7 @@ int main(int argc, char* argv[])
                     num = n;
             }
 
-            // 读取当前真实标签数字
+            // 解析当前真实标签数字
             int label = -1;
             for (int n = 0; n < OUTPUT_LAYER_SIZE; ++n)
             {
@@ -199,19 +199,19 @@ int main(int argc, char* argv[])
         }
 
         double sec = elapsed_timer_elapsed_sec(&et);
-        printf("[Verify elapsed: %lf sec]\n", sec);
+        printf("[Test elapsed: %lf sec]\n", sec);
 
-        // 计算并输出准确率
-        printf("Precision: %lf.\n", (double) correct / (double) VERIFY_SAMPLE_NUM);
+        // 输出模型准确率
+        printf("Precision: %lf.\n", (double) correct / (double) TEST_SAMPLE_NUM);
     }
 
-    // ==========
-    // 保存网络参数
-    // ==========
+    // =======
+    // 保存模型
+    // =======
 
     {
         printf("==============================\n");
-        printf("DO you want to save the net params? [Yes(Y)/No(N)]\n");
+        printf("DO you want to save the model? [Yes(Y)/No(N)]\n");
 
         bool needSave = false;
         do
@@ -241,9 +241,9 @@ int main(int argc, char* argv[])
             char filepath[256] = {0};
             while (scanf("%s", filepath) != 1);
             if (bpnn_params_save_to_file(&params, filepath))
-                printf("Successfull save the net params to %s.\n", filepath);
+                printf("Successfull save the model to %s.\n", filepath);
             else
-                printf("Failed to save the net params to %s.\n", filepath);
+                printf("Failed to save the model to %s.\n", filepath);
         }
     }
 

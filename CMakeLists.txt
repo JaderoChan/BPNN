@@ -6,8 +6,8 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 
 set(
     SRCS
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/bpnn.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/bpnn.c
+    src/bpnn.h
+    src/bpnn.c
 )
 add_library(${PROJECT_NAME} STATIC ${SRCS})
 
@@ -17,7 +17,7 @@ endif()
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
-option(BPNN_BUILD_EXAMPLE "Build the digit recognizer example use BPNN." ON)
+option(BPNN_BUILD_EXAMPLE "Build examples" ON)
 if(BPNN_BUILD_EXAMPLE)
-    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/example/digit_recognizer)
+    add_subdirectory(example)
 endif()

@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "config.h"
+#include <config.h>
 
 bool load_ins_samples_from_image_set(
     double* ins_samples, FILE* file,

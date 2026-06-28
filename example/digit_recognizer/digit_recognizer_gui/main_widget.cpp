@@ -150,7 +150,7 @@ void MainWidget::predict()
     }
 
     double outs[10] = {0.0};
-    bpnn_use(&netParams_, ins, outs);
+    bpnn_predict(&netParams_, ins, outs);
 
     int    num = 0;
     double max = 0.0;

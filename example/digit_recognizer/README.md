@@ -25,31 +25,34 @@
 | `t10k-images-idx3-ubyte` | 测试图像（格式同训练集） | 10,000 |
 | `t10k-labels-idx1-ubyte` | 测试标签（格式同训练集） | 10,000 |
 
-使用前请先解压 `train/data_set/` 目录下的压缩包。
-
-## 使用
-
-`./use` 目录下具有一个基于 **Qt** 实现的数字识别器项目，`./use/bpnn_net_params/net_params.np` 是一个 50 轮训练的结果，可供数字识别器使用。
-
 ## 构建
 
-默认情况下将仅构建 `train` 项目
+> 项目构建前请先解压 `data_set/` 目录下的压缩包。
+
+默认情况下仅构建模型训练与测试模块。
 
 ```sh
 cmake -B build
-cmake --build build
+cmake --build build -j --config=Release
 ```
 
-如果需要构建 `use` 项目（基于 **Qt** 的数字识别器），需保证 **Qt** （Qt5/Qt6 均可使用）在构建环境中可见
+如果需要构建 **数字识别器 GUI** 项目，需保证 **Qt** （Qt5/Qt6）在构建环境中可用。
 
 ```sh
-cmake -B build -DBUILD_DIGIT_RECOGNIZER_USE=ON
-cmke --build build
+cmake -B build -DBUILD_DIGIT_RECOGNIZER_GUI=ON
+cmke --build build -j --config=Release
 ```
+
+## 使用
+
+1. 运行模型训练程序以进行模型的训练、测试与保存
+2. 运行 GUI 程序，加载训练好的模型数据，手写数字进行识别
+
+> `models` 目录下具有训练好的模型文件，可供 GUI 程序加载使用。
 
 ## 结果
 
 迭代 50 轮后，测试集准确率可达 **98%**，训练大约需要五分钟时间。
 
 ![train_result](./images/train_result.png)
-![use_result](./images/use_result.png)
+![predict_result](./images/predict_result.png)

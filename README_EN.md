@@ -32,8 +32,6 @@ cmake -B build -DCMAKE_BUILD_TYPE=Release -DBPNN_BUILD_EXAMPLE=OFF
 cmake --build build -j --config=Release
 ```
 
-Output: static library `libbpnn.a`, header at `src/bpnn.h`.
-
 ### Build the Example
 
 To build the example program, first extract the dataset archives under `example/digit_recognizer/data_set/`, then enable the option:
@@ -60,15 +58,15 @@ cmake --build build -j --config=Release
 
 ```c
 // Train
-void bpnn_train(
+bool bpnn_train(
     bpnn_params_t* params,
     const double* ins_samples, const double* labels_samples, uint32_t sample_num,
     double learn_rate, loss_fn_t loss_fn, uint32_t epoch, double esp,
     bpnn_train_sample_callback_t sample_callback, void* sc_userdata,
     bpnn_train_epoch_callback_t  epoch_callback,  void* ec_userdata);
 
-// Inference
-void bpnn_use(const bpnn_params_t* params, const double* ins, double* outs);
+// Inference and predict
+bool bpnn_predict(const bpnn_params_t* params, const double* ins, double* outs);
 ```
 
 ## Example

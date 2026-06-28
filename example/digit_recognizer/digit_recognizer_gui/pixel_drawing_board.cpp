@@ -164,23 +164,16 @@ void PixelDrawingBoard::mouseMoveEvent(QMouseEvent* event)
 {
     cursorPos_ = event->position();
     updateBrushPoints();
-    if (isPressed_)
+    if (event->buttons() & Qt::LeftButton)
         applyBrushColor();
     update();
 }
 
 void PixelDrawingBoard::mousePressEvent(QMouseEvent* event)
 {
-    isPressed_ = true;
     cursorPos_ = event->position();
     updateBrushPoints();
     applyBrushColor();
-    update();
-}
-
-void PixelDrawingBoard::mouseReleaseEvent(QMouseEvent* event)
-{
-    isPressed_ = false;
     update();
 }
 
