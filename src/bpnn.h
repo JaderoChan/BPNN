@@ -27,7 +27,7 @@
  * @file bpnn.h
  * @brief 一个纯 C99 实现的三层全连接 BP 神经网络库，无任何第三方依赖，出于学习目的创建
  * @author 頔珞 JaderoChan
- * @version 0.1.0
+ * @version 1.1.1
  */
 
 #ifndef BPNN_H
@@ -112,7 +112,7 @@ void bpnn_params_destroy(bpnn_params_t* params);
 bool bpnn_params_valid(const bpnn_params_t* params);
 
 /** @brief 随机化指定 \ref bpnn_params_t 对象的权重参数至 Xavier 区间 */
-void bpnn_params_randomize(bpnn_params_t* params);
+bool bpnn_params_randomize(bpnn_params_t* params);
 
 bool bpnn_params_load(bpnn_params_t* params, FILE* file);
 
@@ -251,14 +251,14 @@ typedef void (*bpnn_train_epoch_callback_t)(
  * @param epoch_callback    [in] 每轮训练结束后调用，可为 NULL
  * @param ec_userdata       [in] 传递给 epoch_callback 回调的自定义指针，可为 NULL
  */
-void bpnn_train(
+bool bpnn_train(
     bpnn_params_t* params,
     const double* ins_samples, const double* labels_samples, uint32_t sample_num,
     double learn_rate, loss_fn_t loss_fn, uint32_t epoch, double esp,
     bpnn_train_sample_callback_t sample_callback, void* sc_userdata,
     bpnn_train_epoch_callback_t  epoch_callback,  void* ec_userdata);
 
-void bpnn_use(const bpnn_params_t* params, const double* ins, double* outs);
+bool bpnn_use(const bpnn_params_t* params, const double* ins, double* outs);
 
 // =========
 // > 工具函数

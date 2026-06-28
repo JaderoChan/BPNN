@@ -146,10 +146,10 @@ bool bpnn_params_valid(const bpnn_params_t* params)
     );
 }
 
-void bpnn_params_randomize(bpnn_params_t* params)
+bool bpnn_params_randomize(bpnn_params_t* params)
 {
     if (!bpnn_params_valid(params))
-        return;
+        return false;
 
     static bool seeded = false;
     if (!seeded)
@@ -179,6 +179,8 @@ void bpnn_params_randomize(bpnn_params_t* params)
         const double p = (double) rand() / (double) RAND_MAX;
         params->hide_out_weights[i] = (2.0 * p - 1.0) * a2;
     }
+
+    return true;
 }
 
 bool bpnn_params_load(bpnn_params_t* params, FILE* file)
@@ -766,7 +768,7 @@ void bpnnet_back_propagation(bpnnet_t* net)
     bpnnet_update_params(net);
 }
 
-void bpnn_train(
+bool bpnn_train(
     bpnn_params_t* params,
     const double* ins_samples, const double* labels_samples, uint32_t sample_num,
     double learn_rate, loss_fn_t loss_fn, uint32_t epoch, double esp,
@@ -776,11 +778,11 @@ void bpnn_train(
     if (learn_rate == 0.0 || loss_fn == LOSS_FN_NONE ||
         !params || !bpnn_params_valid(params) ||
         !ins_samples || !labels_samples || sample_num == 0)
-        return;
+        return false;
 
     bpnnet_t net = BPNNET_INIT;
     if (!bpnnet_construct_for_train(&net, params, NULL, NULL, learn_rate, loss_fn))
-        return;
+        return false;
 
     bool stop = false;
     double last_loss = NAN;
@@ -809,7 +811,7 @@ void bpnn_train(
             if (stop)
             {
                 bpnnet_destroy(&net);
-                return;
+                return true;
             }
         }
 
@@ -826,21 +828,23 @@ void bpnn_train(
     }
 
     bpnnet_destroy(&net);
+    return true;
 }
 
-void bpnn_use(const bpnn_params_t* params, const double* ins, double* outs)
+bool bpnn_use(const bpnn_params_t* params, const double* ins, double* outs)
 {
     if (!params || !bpnn_params_valid(params) || !ins || !outs)
-        return;
+        return false;
 
     bpnnet_t net = BPNNET_INIT;
     if (!bpnnet_construct_for_use(&net, params, ins))
-        return;
+        return false;
 
     bpnnet_forward_propagation(&net);
     memcpy(outs, net.outs, (size_t) params->out_num * sizeof(double));
 
     bpnnet_destroy(&net);
+    return true;
 }
 
 double mse_loss(const bpnnet_t* net)

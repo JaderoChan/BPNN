@@ -101,10 +101,15 @@ int main(int argc, char* argv[])
         elapsed_timer_create(&et2);
         elapsed_timer_reset(&et);
 
-        bpnn_train(
+        const bool ok = bpnn_train(
             &params, ins_samples, labels_samples, TRAIN_SAMPLE_NUM,
             TRAIN_LEARN_RATE, LOSS_FN_CCE, TRAIN_EPOCH, TRAIN_ESP,
             NULL, NULL, train_epoch_callback, &et2);
+        if (!ok)
+        {
+            bpnn_params_destroy(&params);
+            ERROR_EXIT("Failed to train.\n", 1);
+        }
 
         double sec = elapsed_timer_elapsed_sec(&et);
         printf("[Train elapsed: %lf sec]\n", sec);
@@ -167,7 +172,12 @@ int main(int argc, char* argv[])
         {
             const double* ins    = &ins_samples[i * params.in_num];
             const double* labels = &labels_samples[i * params.out_num];
-            bpnn_use(&params, ins, outs);
+            const bool ok = bpnn_use(&params, ins, outs);
+            if (!ok)
+            {
+                bpnn_params_destroy(&params);
+                ERROR_EXIT("Failed to use.\n", 1);
+            }
 
             // 读取当前输出的数字
             int num = -1;
@@ -237,5 +247,6 @@ int main(int argc, char* argv[])
         }
     }
 
+    bpnn_params_destroy(&params);
     return 0;
 }
