@@ -1,3 +1,5 @@
+#pragma once
+
 #include <qwidget.h>
 #include <qpushbutton.h>
 #include <qtoolbutton.h>
