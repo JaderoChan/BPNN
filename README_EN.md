@@ -2,6 +2,8 @@
 
 [[中文简体](README.md) | **English**]
 
+[![Version](https://img.shields.io/badge/version-1.2.0-blue.svg)](https://github.com/JaderoChan/BPNN)
+
 > This document was translated by AI.
 
 A three-layer fully-connected BP neural network library implemented in pure C99, with no third-party dependencies, created for learning purposes.

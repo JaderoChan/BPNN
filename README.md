@@ -2,6 +2,8 @@
 
 [**中文简体** | [English](README_EN.md)]
 
+[![Version](https://img.shields.io/badge/version-1.2.0-blue.svg)](https://github.com/JaderoChan/BPNN)
+
 一个纯 C99 实现的三层全连接 BP 神经网络库，无任何第三方依赖，出于学习目的创建。
 
 > **可用枚举**
