@@ -2,96 +2,195 @@
 
 #include <cstring>
 
-#include <qstyle.h>
+#include <qdialog.h>
+#include <qfiledialog.h>
 #include <qlabel.h>
 #include <qlayout.h>
-#include <qfiledialog.h>
+#include <qlist.h>
 #include <qmessagebox.h>
+#include <qpixmap.h>
+#include <qstyle.h>
+
+constexpr QSizePolicy VERTICAL_FIXED_POLICY(QSizePolicy::Expanding, QSizePolicy::Fixed);
+
+class PredictResultDialog : public QDialog
+{
+public:
+    PredictResultDialog(const QImage& inputImage, double* confidences, int result,
+        QWidget* parent = nullptr)
+        : QDialog(parent)
+    {
+        setWindowTitle("Result");
+
+        // Image display
+        QWidget* imgWgt = new QWidget(this);
+        imgWgt->setSizePolicy(VERTICAL_FIXED_POLICY);
+        {
+            QLabel* imgLabel = new QLabel(imgWgt);
+            imgLabel->setPixmap(QPixmap::fromImage(inputImage));
+            imgLabel->setFixedSize(56, 56);
+            imgLabel->setScaledContents(true);
+
+            QHBoxLayout* l = new QHBoxLayout(imgWgt);
+            l->setContentsMargins(0, 0, 0, 0);
+            l->addStretch();
+            l->addWidget(imgLabel);
+            l->addStretch();
+        }
+
+        // Result display
+        QWidget* resultWgt = new QWidget(this);
+        resultWgt->setSizePolicy(VERTICAL_FIXED_POLICY);
+        {
+            const QString text = QString("Result: %1").arg(result);
+            QLabel* resultLabel = new QLabel(text, resultWgt);
+            QFont font = resultLabel->font();
+            font.setPointSize(13);
+            font.setBold(true);
+            resultLabel->setFont(font);
+            resultLabel->setAlignment(Qt::AlignCenter);
+
+            QHBoxLayout* l = new QHBoxLayout(resultWgt);
+            l->setContentsMargins(0, 0, 0, 0);
+            l->addWidget(resultLabel);
+        }
+
+        // Confidences display
+        QWidget* confidencesWgt = new QWidget(this);
+        {
+            QVBoxLayout* l = new QVBoxLayout(confidencesWgt);
+            l->setContentsMargins(0, 0, 0, 0);
+            for (int i = 0; i < 10; ++i)
+            {
+                const QString text = QString("%1: %2").arg(i).arg(confidences[i], 0, 'f', 6);
+                QLabel* label = new QLabel(text, confidencesWgt);
+                label->setSizePolicy(VERTICAL_FIXED_POLICY);
+                label->setAlignment(Qt::AlignCenter);
+                l->addWidget(label);
+            }
+        }
+
+        QVBoxLayout* l = new QVBoxLayout(this);
+        l->addWidget(imgWgt);
+        l->addWidget(resultWgt);
+        l->addWidget(confidencesWgt);
+    }
+};
 
 MainWidget::MainWidget(QWidget* parent)
     : QWidget(parent)
 {
     setWindowTitle("BPNN Digit Recognizer");
 
-    netParamsFilepathInputer_.setPlaceholderText("Input the net params file path.");
-    selectNetParamsFileButton_.setIcon(style()->standardIcon(QStyle::SP_FileIcon));
-    selectNetParamsFileButton_.setToolTip("Select a net params file.");
-    loadNetParamsButton_.setText("Load net params");
-    clearBoardButton_.setText("Clear");
-    predict_.setText("Predict");
-
-    board_.setBoardSize(QSize(128, 128));
-    board_.setFixedSize(512, 512);
-    board_.fill(0);
-    board_.setBrushColor(128);
-    board_.setBrushSize(8);
-
-    QWidget*     w1 = new QWidget(this);
-    w1->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-    QHBoxLayout* l1 = new QHBoxLayout(w1);
-    l1->setContentsMargins(0, 0, 0, 0);
-    l1->addWidget(new QLabel("Net Params:", this));
-    l1->addWidget(&netParamsFilepathInputer_);
-    l1->addWidget(&selectNetParamsFileButton_);
-    l1->addWidget(&loadNetParamsButton_);
-
-    QWidget*     w2 = new QWidget(this);
-    QVBoxLayout* l2 = new QVBoxLayout(w2);
-    l2->setContentsMargins(QMargins(0, 0, 0, 0));
-    l2->addWidget(&board_);
-    QWidget*     w3 = new QWidget(w2);
-    w3->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-    QHBoxLayout* l3 = new QHBoxLayout(w3);
-    l3->setContentsMargins(QMargins(0, 0, 0, 0));
-    l3->addStretch();
-    l3->addWidget(&clearBoardButton_);
-    l2->addWidget(w3);
-
-    QVBoxLayout* l0 = new QVBoxLayout(this);
-    l0->addWidget(w1);
-    l0->addWidget(w2);
-    l0->addWidget(&predict_);
-
-    connect(&selectNetParamsFileButton_, &QToolButton::clicked, this, [=]()
+    // Top UI
+    QWidget* topWgt = new QWidget(this);
+    topWgt->setSizePolicy(VERTICAL_FIXED_POLICY);
     {
-        const QString filepath =
-            QFileDialog::getOpenFileName(this, "Open the net params file", QDir::currentPath());
-        if (!filepath.isEmpty())
-            netParamsFilepathInputer_.setText(filepath);
-    });
+        indicator_.setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+        modelPathInputer_.setPlaceholderText("Input the model file path");
+        browseModelButton_.setIcon(style()->standardIcon(QStyle::SP_FileIcon));
+        browseModelButton_.setToolTip("Open a model file");
+        loadModelButton_.setText("Load");
 
-    connect(&loadNetParamsButton_, &QPushButton::clicked, this, [=]()
-    {
-        const std::string filepath = netParamsFilepathInputer_.text().toStdString();
-        const bool ok = bpnn_params_load_from_file(&netParams_, filepath.c_str());
-        if (!ok)
-            QMessageBox::warning(this, "Warning", "Failed to load the net params file.");
-    });
-
-    connect(&clearBoardButton_, &QPushButton::clicked, &board_, [=]()
-    { board_.fill(0); });
-
-    connect(&predict_, &QPushButton::clicked, this, &MainWidget::predict);
-}
-
-void MainWidget::predict()
-{
-    if (!bpnn_params_valid(&netParams_))
-    {
-        QMessageBox::warning(this, "Warning", "The invalid bpnn params.");
-        return;
+        QHBoxLayout* l = new QHBoxLayout(topWgt);
+        l->setContentsMargins(0, 0, 0, 0);
+        l->addWidget(&indicator_);
+        l->addWidget(new QLabel("Model:", topWgt));
+        l->addWidget(&modelPathInputer_);
+        l->addWidget(&browseModelButton_);
+        l->addWidget(&loadModelButton_);
     }
 
-    const QImage src = board_.exportImage();
-
-    // 找到图像有效区域边界（具有笔迹的地方）
-    int xMin = src.width(), xMax = -1, yMin = src.height(), yMax = -1;
-    for (int y = 0; y < src.height(); ++y)
+    // Pixel drawing board UI
+    QWidget* boardWgt = new QWidget(this);
     {
-        const uchar* line = src.constScanLine(y);
-        for (int x = 0; x < src.width(); ++x)
+        pixelDrawingBoard_.setBoardSize(128, 128);
+        pixelDrawingBoard_.setFixedSize(512, 512);
+        pixelDrawingBoard_.fill(0);
+        pixelDrawingBoard_.setBrushDelta(128);
+        pixelDrawingBoard_.setBrushSize(8);
+
+        QWidget* boardToolWgt = new QWidget(this);
         {
-            if (line[x] > 35)
+            brushDeltaSlider_.setOrientation(Qt::Horizontal);
+            brushDeltaSlider_.setRange(-255, 255);
+            brushDeltaSlider_.setValue(128);
+            brushDeltaSlider_.setToolTip(QString::number(128));
+            clearBoardButton_.setText("Clear");
+            clearBoardButton_.setShortcut(QKeySequence(QKeyCombination(Qt::CTRL, Qt::Key_C)));
+
+            QHBoxLayout* l = new QHBoxLayout(boardToolWgt);
+            l->setContentsMargins(0, 0, 0, 0);
+            l->addWidget(new QLabel("Brush delta:", boardToolWgt));
+            l->addWidget(&brushDeltaSlider_);
+            l->addWidget(&clearBoardButton_);
+        }
+
+        QVBoxLayout* l = new QVBoxLayout(boardWgt);
+        l->setContentsMargins(0, 0, 0, 0);
+        l->setSpacing(1);
+        l->addWidget(&pixelDrawingBoard_);
+        l->addWidget(boardToolWgt);
+    }
+
+    // Bottom UI
+    QWidget* bottomWgt = new QWidget(this);
+    bottomWgt->setSizePolicy(VERTICAL_FIXED_POLICY);
+    {
+        predictButton_.setText("Predict");
+        predictButton_.setShortcut(QKeySequence(QKeyCombination(Qt::CTRL, Qt::Key_Return)));
+
+        QHBoxLayout* l = new QHBoxLayout(bottomWgt);
+        l->setContentsMargins(0, 0, 0, 0);
+        l->addWidget(&predictButton_);
+    }
+
+    QVBoxLayout* l = new QVBoxLayout(this);
+    l->addWidget(topWgt);
+    l->addWidget(boardWgt);
+    l->addWidget(bottomWgt);
+
+    // Connects
+    connect(&browseModelButton_, &QToolButton::clicked, this, [=]()
+    {
+        const QString filepath =
+            QFileDialog::getOpenFileName(this, "Open a model file", QDir::currentPath());
+        if (!filepath.isEmpty())
+            modelPathInputer_.setText(filepath);
+    });
+    connect(&loadModelButton_, &QPushButton::clicked, this, [=]()
+    {
+        const std::string filepath = modelPathInputer_.text().toStdString();
+        const bool ok = bpnn_params_load_from_file(&netParams_, filepath.c_str());
+        if (!ok)
+            QMessageBox::warning(
+                this, "Warning", QString("Failed to load the model file: \"%1\".").arg(filepath));
+        else
+            indicator_.setColor(Qt::green);
+    });
+
+    connect(&brushDeltaSlider_, &QSlider::valueChanged, this, [=](int value)
+    {
+        brushDeltaSlider_.setToolTip(QString::number(value));
+        pixelDrawingBoard_.setBrushDelta(value);
+    });
+    connect(&clearBoardButton_, &QPushButton::clicked, this, [=]()
+    {
+        pixelDrawingBoard_.fill(0);
+    });
+
+    connect(&predictButton_, &QPushButton::clicked, this, &MainWidget::predict);
+}
+
+static QRect boudingOfDrawn(const QImage& image, uchar baseColor)
+{
+    int xMin = image.width(), xMax = 0, yMin = image.height(), yMax = 0;
+    for (int y = 0; y < image.height(); ++y)
+    {
+        const uchar* line = image.constScanLine(y);
+        for (int x = 0; x < image.width(); ++x)
+        {
+            if (line[x] != baseColor)
             {
                 xMin = qMin(xMin, x);
                 xMax = qMax(xMax, x);
@@ -101,76 +200,78 @@ void MainWidget::predict()
         }
     }
 
-    double ins[28 * 28] = {0.0};
-
-    // 处理图像：居中有效区域，增加边距以模拟 MNIST 的数据集图像。
     if (xMax >= xMin && yMax >= yMin)
+        return QRect(QPoint(xMin, yMin), QPoint(xMax, yMax));
+    return image.rect();
+}
+
+void MainWidget::predict()
+{
+    if (!bpnn_params_valid(&netParams_))
     {
-        const int bw         = xMax - xMin + 1;
-        const int bh         = yMax - yMin + 1;
-        const int side       = qMax(bw, bh);
-        const int margin     = qMax(2, side / 7);
-        const int squareSide = side + 2 * margin;
-
-        const int  cx       = (xMin + xMax) / 2;
-        const int  cy       = (yMin + yMax) / 2;
-        const QRect cropRect(cx - squareSide / 2, cy - squareSide / 2, squareSide, squareSide);
-
-        QImage cropCanvas(squareSide, squareSide, QImage::Format_Grayscale8);
-        cropCanvas.fill(0);
-        const QRect validCrop = cropRect.intersected(src.rect());
-        if (!validCrop.isEmpty())
-        {
-            const int dstX = validCrop.x() - cropRect.x();
-            const int dstY = validCrop.y() - cropRect.y();
-            for (int dy = 0; dy < validCrop.height(); ++dy)
-            {
-                const uchar* srcLine = src.constScanLine(validCrop.y() + dy);
-                uchar*       dstLine = cropCanvas.scanLine(dstY + dy);
-                memcpy(dstLine + dstX, srcLine + validCrop.x(), (size_t) validCrop.width());
-            }
-        }
-
-        const QImage scaled20 = cropCanvas
-            .scaled(20, 20, Qt::IgnoreAspectRatio, Qt::SmoothTransformation)
-            .convertToFormat(QImage::Format_Grayscale8);
-        QImage canvas28(28, 28, QImage::Format_Grayscale8);
-        canvas28.fill(0);
-        for (int dy = 0; dy < 20; ++dy)
-        {
-            const uchar* srcLine = scaled20.constScanLine(dy);
-            uchar*       dstLine = canvas28.scanLine(4 + dy);
-            memcpy(dstLine + 4, srcLine, 20);
-        }
-
-        // 归一化数据
-        for (int y = 0; y < 28; ++y)
-            for (int x = 0; x < 28; ++x)
-                ins[y * 28 + x] = (double) canvas28.constScanLine(y)[x] / 255.0;
+        QMessageBox::warning(this, "Warning", "Current model is invalid.");
+        return;
     }
 
+    const QImage src = pixelDrawingBoard_.exportImage();
+
+    // 预处理图像
+    // 1. 获取图像有效区域（已绘制区域）包围盒。
+    // 2. 构造一个方形图像，其尺寸为有效区域的最小正方形包围盒大小。
+    // 3. 将有效区域居中显示在方形图像上。
+    // 4. 将方形图像缩放至 20 * 20 大小，再居中显示到 28 * 28 的结果图像上。
+    QImage normalizedImg(28, 28, QImage::Format_Grayscale8);
+    normalizedImg.fill(QColor(0, 0, 0));
+    const QRect drawnRect = boudingOfDrawn(src, 0);
+    if (drawnRect.isValid())
+    {
+        const int squareSide = qMax(drawnRect.width(), drawnRect.height());
+        const int xMargin = (squareSide - drawnRect.width())  / 2;
+        const int yMargin = (squareSide - drawnRect.height()) / 2;
+
+        QImage canvas(squareSide, squareSide, QImage::Format_Grayscale8);
+        canvas.fill(QColor(0, 0, 0));
+        for (int y = 0; y < drawnRect.height(); ++y)
+        {
+            const uchar* srcLine = src.constScanLine(drawnRect.y() + y);
+            uchar*       dstLine = canvas.scanLine(yMargin + y);
+            memcpy(dstLine + xMargin, srcLine + drawnRect.x(), drawnRect.width());
+        }
+        canvas = canvas.scaled(20, 20);
+
+        for (int y = 0; y < 20; ++y)
+        {
+            const uchar* srcLine = canvas.constScanLine(y);
+            uchar*       dstLine = normalizedImg.scanLine(y + 4);
+            memcpy(dstLine + 4, srcLine, 20);
+        }
+    }
+
+    // 归一化数据
+    double ins[28 * 28] = {0.0};
+    for (int y = 0; y < 28; ++y)
+        for (int x = 0; x < 28; ++x)
+            ins[y * 28 + x] = static_cast<double>(normalizedImg.constScanLine(y)[x]) / 255.0;
+
+    // 推理预测
     double outs[10] = {0.0};
     bpnn_predict(&netParams_, ins, outs);
 
-    int    num = 0;
-    double max = 0.0;
-    for (int i = 0; i < 10; ++i)
+    // 解析结果
+    int result = 0;
     {
-        if (outs[i] > max)
+        double maxConfidence = -INFINITY;
+        for (int i = 0; i < 10; ++i)
         {
-            max = outs[i];
-            num = i;
+            if (outs[i] > maxConfidence)
+            {
+                maxConfidence = outs[i];
+                result = i;
+            }
         }
     }
 
-    QString text = QString(
-        "Result: %1\n\n"
-        "0: %2\n1: %3\n2: %4\n3: %5\n4: %6\n"
-        "5: %7\n6: %8\n7: %9\n8: %10\n9: %11\n")
-        .arg(num)
-        .arg(outs[0], 0, 'f', 6).arg(outs[1], 0, 'f', 6).arg(outs[2], 0, 'f', 6)
-        .arg(outs[3], 0, 'f', 6).arg(outs[4], 0, 'f', 6).arg(outs[5], 0, 'f', 6)
-        .arg(outs[6], 0, 'f', 6).arg(outs[7], 0, 'f', 6).arg(outs[8], 0, 'f', 6)
-        .arg(outs[9], 0, 'f', 6);
-    QMessageBox::information(this, "Predict result", text);
+    // 显示结果
+    PredictResultDialog dlg(normalizedImg, outs, result, this);
+    dlg.exec();
 }

@@ -9,6 +9,8 @@ set(
     SRCS
     pixel_drawing_board.h
     pixel_drawing_board.cpp
+    color_dot_indicator.h
+    color_dot_indicator.cpp
     main_widget.h
     main_widget.cpp
     main.cpp

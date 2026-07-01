@@ -1,11 +1,13 @@
 #pragma once
 
-#include <qwidget.h>
-#include <qpushbutton.h>
-#include <qtoolbutton.h>
 #include <qlineedit.h>
+#include <qpushbutton.h>
+#include <qslider.h>
+#include <qtoolbutton.h>
+#include <qwidget.h>
 
 #include <bpnn.h>
+#include "color_dot_indicator.h"
 #include "pixel_drawing_board.h"
 
 class MainWidget : public QWidget
@@ -16,11 +18,13 @@ public:
     void predict();
 
 private:
-    QLineEdit           netParamsFilepathInputer_;
-    QToolButton         selectNetParamsFileButton_;
-    QPushButton         loadNetParamsButton_;
+    QLineEdit           modelPathInputer_;
+    QToolButton         browseModelButton_;
+    QPushButton         loadModelButton_;
+    QSlider             brushDeltaSlider_;
     QPushButton         clearBoardButton_;
-    QPushButton         predict_;
-    PixelDrawingBoard   board_;
+    QPushButton         predictButton_;
+    ColorDotIndicator   indicator_;
+    PixelDrawingBoard   pixelDrawingBoard_;
     bpnn_params_t       netParams_  = BPNN_PARAMS_INIT;
 };
