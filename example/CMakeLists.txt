@@ -1,5 +1,5 @@
 option(BUILD_DIGIT_RECOGNIZER_EXAMPLE "Build the digit recognizer example" ON)
-option(BUILD_CURVE_FITTING_EXAMPLE    "Build the curve fitting example"    ON)
+option(BUILD_CURVE_FITTING_EXAMPLE    "Build the curve fitting example"    OFF)
 if(BUILD_DIGIT_RECOGNIZER_EXAMPLE)
     add_subdirectory(digit_recognizer)
 endif()
