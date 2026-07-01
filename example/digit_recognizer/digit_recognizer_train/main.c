@@ -105,6 +105,8 @@ int main(int argc, char* argv[])
             &params, ins_samples, labels_samples, TRAIN_SAMPLE_NUM,
             TRAIN_LEARN_RATE, LOSS_FN_CCE, TRAIN_EPOCH, TRAIN_ESP,
             NULL, NULL, train_epoch_callback, &et2);
+        free(ins_samples);
+        free(labels_samples);
         if (!ok)
         {
             bpnn_params_destroy(&params);
@@ -197,6 +199,9 @@ int main(int argc, char* argv[])
 
             correct += (num == label ? 1 : 0);
         }
+
+        free(ins_samples);
+        free(labels_samples);
 
         double sec = elapsed_timer_elapsed_sec(&et);
         printf("[Test elapsed: %lf sec]\n", sec);
